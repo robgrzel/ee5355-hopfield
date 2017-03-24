@@ -2,8 +2,6 @@
 
 // Note: __CUDACC__ macro tests are used to exclude __device__ and __host__ specifiers if compiling with gcc
 
-#include <stdint.h>
-//#include <stdbool.h>
 #include <vector>
 #include <array>
 #include <cassert>
@@ -33,6 +31,16 @@ public:
 };
 
 // Implementation subclasses
+class CPUHebbianTraining : public Training {
+public:
+  ~CPUHebbianTraining() {};
+
+  void train(const std::vector<bool> &data,
+	     std::vector<std::vector<float> > &weights,
+	     unsigned numDataSets);
+  std::string getName() const { return "CPU Hebbian"; }
+};
+
 class CPUStorkeyTraining : public Training {
 public:
   ~CPUStorkeyTraining() {};
@@ -51,6 +59,36 @@ public:
 			   const std::vector<float> &thresholds,
 			   const std::vector<std::vector<float> > &weights);
   std::string getName() const { return "CPU dense"; }
+};
+
+class CPUSparseRecall : public Recall {
+public:
+  ~CPUSparseRecall() {};
+
+  std::vector<bool> recall(const std::vector<bool> &data,
+			   const std::vector<float> &thresholds,
+			   const std::vector<std::vector<float> > &weights);
+  std::string getName() const { return "CPU sparse"; }
+};
+
+class GPUDenseRecall : public Recall {
+public:
+  ~GPUDenseRecall() {};
+
+  std::vector<bool> recall(const std::vector<bool> &data,
+			   const std::vector<float> &thresholds,
+			   const std::vector<std::vector<float> > &weights);
+  std::string getName() const { return "GPU dense"; }
+};
+
+class GPUSparseRecall : public Recall {
+public:
+  ~GPUSparseRecall() {};
+
+  std::vector<bool> recall(const std::vector<bool> &data,
+			   const std::vector<float> &thresholds,
+			   const std::vector<std::vector<float> > &weights);
+  std::string getName() const { return "GPU sparse"; }
 };
 
 // Representation of a Hopfield network

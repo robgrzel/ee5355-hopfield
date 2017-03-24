@@ -4,15 +4,12 @@
 #
 ################################################################################
 
-# Using a newer version of CUDA than the default
-CUDA_INSTALL_PATH ?= /usr/local/cuda-8.0
-
 EXECUTABLE  := hopfield
 
 # CUDA source files (compiled with cudacc)
-CUFILES	    := hopfield.cu
+CUFILES	    := recall_dense.cu recall_sparse.cu
 # C/C++ source files (compiled with gcc / c++)
-CCFILES	    := hopfield.cpp main.cpp
+CCFILES	    := training_hebbian.cpp training_storkey.cpp recall_dense.cpp recall_sparse.cpp main.cpp
 # Header files included by any of CUFILES
 CUHEADERS   := hopfield.hpp
 # Header files included by any of CCFILES
@@ -38,13 +35,13 @@ C_DEPS      := $(addprefix $(SRCDIR)/, $(CCHEADERS)) Makefile
 CUOBJS      := $(patsubst %.cu, $(OBJDIR)/%.cu.o, $(CUFILES))
 CCOBJS      := $(patsubst %.cpp, $(OBJDIR)/%.cpp.o, $(CCFILES))
 
-NVCC        := $(CUDA_INSTALL_PATH)/bin/nvcc
-NVCCFLAGS   += --generate-code arch=compute_20,code=sm_20 --generate-code arch=compute_30,code=sm_30 -Wno-deprecated-gpu-targets -m64 -DUNIX -std=c++11 --compiler-options -fno-strict-aliasing -I"$(CUDA_INSTALL_PATH)/include"
+NVCC        := nvcc
+NVCCFLAGS   += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_61,code=sm_61 -Wno-deprecated-gpu-targets -m64 -DUNIX -std=c++11 --compiler-options -fno-strict-aliasing
 
 CXX         := g++
-CXXFLAGS    += -fopenmp -fno-strict-aliasing -m64 -std=gnu++11 -Wall -Wextra -DVERBOSE -DUNIX -I"$(CUDA_INSTALL_PATH)/include"
+CXXFLAGS    += -fopenmp -fno-strict-aliasing -m64 -std=gnu++11 -Wall -Wextra -DVERBOSE -DUNIX
 
-LIB         += -lgomp -L"$(CUDA_INSTALL_PATH)/lib64" -lcudart
+LIB         += -lgomp -lcudart
 
 ifeq ($(dbg),1)
   CXXFLAGS  += -g3 -ggdb
