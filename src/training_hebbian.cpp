@@ -19,10 +19,11 @@ void CPUHebbianTraining::train(const vector<bool> &data,
       elems[i] = -1;
   }
 
-  #pragma omp parallel for
+#pragma omp parallel for
   for (size_t i = 0; i < size; i++) {
     for (size_t j = 0; j < size; j++) {
-      weights[i][j] += elems[i] * elems[j] / numDataSets;
+      float newWeight = elems[i] * elems[j];
+      weights[i][j] = (weights[i][j] * numDataSets + newWeight) / (numDataSets + 1);
     }
   }
 }

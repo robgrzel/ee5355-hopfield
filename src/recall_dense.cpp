@@ -15,8 +15,7 @@ vector<bool> CPUDenseRecall::recall(const vector<bool> &data,
   bool stable = false;
   do {
     vector<bool> newState(size);
-    stable = true;
-    #pragma omp parallel for
+#pragma omp parallel for
     for (size_t i = 0; i < size; i++) {
       float value = 0;
       for (size_t j = 0; j < size; j++) {
@@ -25,9 +24,11 @@ vector<bool> CPUDenseRecall::recall(const vector<bool> &data,
 	else
 	  value -= weights[i][j];
       }
-      newState[i] = value > thresholds[i];
-      #pragma omp atomic
-      stable &= newState[i] == state[i];
+      bool newStateVal = value > thresholds[i];
+#pragma omp atomic
+      stable |= newStateVal == state[i];
+#pragma omp critical // Needed since STL isn't thread-safe for modification...
+      newState[i] = newStateVal;
     }
     state = newState;
   } while (!stable);

@@ -7,7 +7,7 @@
 #include <cassert>
 #include <iostream>
 
-#define DEFAULT_THRESHOLD 0.5
+#define DEFAULT_THRESHOLD 0.1
 
 // Strategy abstract classes for various implementations of training and recall
 class Training {
@@ -96,7 +96,7 @@ class HopfieldNetwork {
 public:
   HopfieldNetwork(const std::vector<float> thresholds,
 		  Recall *recallImpl = new CPUDenseRecall(),
-		  Training *trainingImpl = new CPUStorkeyTraining()) :
+		  Training *trainingImpl = new CPUHebbianTraining()) :
     size(thresholds.size()),
     trainingImpl(trainingImpl),
     recallImpl(recallImpl),
@@ -105,16 +105,22 @@ public:
     numDataSets(0) {}
 
   HopfieldNetwork(size_t size,
+		  float threshold = DEFAULT_THRESHOLD,
 		  Recall *recallImpl = new CPUDenseRecall(),
-		  Training *trainingImpl = new CPUStorkeyTraining()) :
-    HopfieldNetwork(std::vector<float>(size, DEFAULT_THRESHOLD), recallImpl, trainingImpl) {}
+		  Training *trainingImpl = new CPUHebbianTraining()) :
+    HopfieldNetwork(std::vector<float>(size, threshold), recallImpl, trainingImpl) {}
+
+  ~HopfieldNetwork() {
+    delete recallImpl;
+    delete trainingImpl;
+  }
 
   void train(const std::vector<bool> &data) {
-    assert(data.size() == size());
+    assert(data.size() == size);
     trainingImpl->train(data, weights, numDataSets++);
   }
   std::vector<bool> recall(const std::vector<bool> &data) {
-    assert(data.size() == size());
+    assert(data.size() == size);
     return recallImpl->recall(data, thresholds, weights);
   }
 
