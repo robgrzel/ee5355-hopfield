@@ -6,8 +6,9 @@
 #include <iostream>
 using namespace std;
 
-#define NUM_TESTS 3
-#define DATA_SIZE 30
+#define NUM_TESTS 5
+#define DATA_SIZE 50
+#define CLEAR_KEY 2
 
 int main() {
   cout << "Training: " << endl;
@@ -29,9 +30,10 @@ int main() {
   cout << "Recall: " << endl;
   
   for (unsigned i = 0; i < NUM_TESTS; i++) {
-    vector<bool> key(DATA_SIZE, 0);
-    for (unsigned j = 0; j < DATA_SIZE / 4; j++) {
-      key[j] = data[i][j];
+    vector<bool> key = data[i];
+    for (unsigned j = 0; j < DATA_SIZE; j++) {
+      if (!(rand() % CLEAR_KEY))
+	key[j] = 0;
     }
     for (unsigned j = 0; j < DATA_SIZE; j++) {
       cout << key[j] << " ";

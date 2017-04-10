@@ -12,25 +12,34 @@ vector<bool> CPUDenseRecall::recall(const vector<bool> &data,
 				    const vector<vector<float> > &weights) {
   vector<bool> state = data;
   size_t size = data.size();
-  bool stable = false;
+  bool stable;
   do {
-    vector<bool> newState(size);
-#pragma omp parallel for
-    for (size_t i = 0; i < size; i++) {
-      float value = 0;
-      for (size_t j = 0; j < size; j++) {
-	if (state[j])
-	  value += weights[i][j];
-	else
-	  value -= weights[i][j];
+    stable = true;
+    for (size_t i = 0; i < size; i += groupSize) {
+      /*for (unsigned j = 0; j < size; j++) {
+	cout << state[j] << " ";
       }
-      bool newStateVal = value > thresholds[i];
+      cout << endl;*/
+      bool updates[groupSize];
+#pragma omp parallel for
+      for (size_t j = 0; j < groupSize; j++) {
+	if (i + j < size) {
+	  float value = 0;
+	  for (size_t k = 0; k < size; k++) {
+	    if (state[k])
+	      value += weights[i + j][k];
+	    else
+	      value -= weights[i + j][k];
+	  }
+	  updates[j] = value > thresholds[i + j];
 #pragma omp atomic
-      stable |= newStateVal == state[i];
-#pragma omp critical // Needed since STL isn't thread-safe for modification...
-      newState[i] = newStateVal;
+	  stable &= updates[j] == state[i + j];
+	}
+      }
+      for (size_t j = 0; j < groupSize && i + j < size; j++) {
+	state[i + j] = updates[j];
+      }
     }
-    state = newState;
   } while (!stable);
   return state;
 }
