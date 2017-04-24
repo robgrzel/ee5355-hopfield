@@ -21,9 +21,9 @@ __global__ void gpu_dense_recall_kernel(size_t size,
   if (i < size) {
     for (size_t k = 0; k < size; ++k) {
       if (state[k])
-        value += weights[i][k];
+        value += weights[i * size + k];
       else
-        value -= weights[i][k];
+        value -= weights[i * size + k];
       update = value > thresholds[i];
       stableT &= update == state[i];
     }
@@ -31,7 +31,7 @@ __global__ void gpu_dense_recall_kernel(size_t size,
     state[i] = update;
 
     //TODO: use reduction to find stable
-    atomicAnd(stable, stableT);
+    atomicAnd((int *) stable, (int) stableT);
   }
 
 }
@@ -56,7 +56,7 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
 
   if (size % numThreads) numBlocks++;
 
-  for (size_t i = 0; i < size; ++i) { {
+  for (size_t i = 0; i < size; ++i) {
     dataArray[i] = data[i];
     thresholdArray[i] = thresholds[i];
 
@@ -69,6 +69,9 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
                     cudaMemcpyHostToDevice) == cudaSuccess);
 
   assert(cudaMemcpy(thresholdDev, thresholdArray, size * sizeof(float),
+                    cudaMemcpyHostToDevice) == cudaSuccess);
+
+  assert(cudaMemcpy(weightDev, weightArray, size * size * sizeof(float),
                     cudaMemcpyHostToDevice) == cudaSuccess);
 
   do {
