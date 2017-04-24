@@ -4,12 +4,12 @@
 #
 ################################################################################
 
-EXECUTABLE  := hopfield
+EXECUTABLES := test
 
 # CUDA source files (compiled with cudacc)
 CUFILES	    := recall_dense.cu recall_sparse.cu
 # C/C++ source files (compiled with gcc / c++)
-CCFILES	    := training_hebbian.cpp training_storkey.cpp recall_dense.cpp recall_sparse.cpp main.cpp
+CCFILES	    := training_hebbian.cpp training_storkey.cpp recall_dense.cpp recall_sparse.cpp
 # Header files included by any of CUFILES
 CUHEADERS   := hopfield.hpp
 # Header files included by any of CCFILES
@@ -35,6 +35,8 @@ C_DEPS      := $(addprefix $(SRCDIR)/, $(CCHEADERS)) Makefile
 CUOBJS      := $(patsubst %.cu, $(OBJDIR)/%.cu.o, $(CUFILES))
 CCOBJS      := $(patsubst %.cpp, $(OBJDIR)/%.cpp.o, $(CCFILES))
 
+BINS        := $(addprefix $(ROOTBINDIR)/, $(EXECUTABLES))
+
 NVCC        := nvcc
 NVCCFLAGS   += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_61,code=sm_61 -Wno-deprecated-gpu-targets -m64 -DUNIX -std=c++11 --compiler-options -fno-strict-aliasing
 
@@ -59,7 +61,7 @@ endif
 
 .PHONY : all clean clobber
 
-all : $(ROOTBINDIR)/$(EXECUTABLE)
+all : $(BINS)
 
 $(OBJDIR)/%.cu.o : $(SRCDIR)/%.cu $(CU_DEPS) | $(OBJDIR)
 	$(V)$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
@@ -70,8 +72,8 @@ $(OBJDIR)/%.cpp.o : $(SRCDIR)/%.cpp $(C_DEPS) | $(OBJDIR)
 $(OBJDIR)/device.o : $(CUOBJS) | $(OBJDIR)
 	$(V)$(NVCC) $(NVCCFLAGS) -dlink $(CUOBJS) -o $@
 
-$(ROOTBINDIR)/$(EXECUTABLE) : $(CUOBJS) $(CCOBJS) $(OBJDIR)/device.o | $(ROOTBINDIR)
-	$(V)$(CXX) -o $@ $(CUOBJS) $(CCOBJS) $(OBJDIR)/device.o $(LIB)
+$(ROOTBINDIR)/% : $(OBJDIR)/%.cpp.o $(CCOBJS) $(CUOBJS) $(OBJDIR)/device.o | $(ROOTBINDIR)
+	$(V)$(CXX) -o $@ $^ $(LIB)
 
 $(OBJDIR) :
 	$(V)mkdir -p $(OBJDIR)
@@ -80,7 +82,7 @@ $(ROOTBINDIR) :
 	$(V)mkdir -p $(ROOTBINDIR)
 
 clean :
-	$(V)rm -f $(ROOTBINDIR)/$(EXECUTABLE) $(CUOBJS) $(CCOBJS) $(OBJDIR)/device.o
+	$(V)rm -f $(BINS) $(CUOBJS) $(CCOBJS) $(OBJDIR)/device.o
 
 clobber : clean
 	$(V)rm -rf $(PARENTBINDIR) $(PARENTOBJDIR)
