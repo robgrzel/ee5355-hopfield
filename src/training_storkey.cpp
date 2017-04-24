@@ -9,8 +9,8 @@ using namespace std;
 
 // TODO: I think there is some sort of bug with this...
 void CPUStorkeyTraining::train(const vector<bool> &data,
-			       vector<vector<float> > &weights,
-			       unsigned numDataSets) {
+                               vector<vector<float> > &weights,
+                               unsigned numDataSets) {
   size_t size = data.size();
   vector<int8_t> elems(size);
   for (size_t i = 0; i < size; i++) {
@@ -26,8 +26,8 @@ void CPUStorkeyTraining::train(const vector<bool> &data,
     for (size_t j = 0; j < size; j++) {
       h[i][j] = 0;
       for (size_t k = 0; k < size; k++) {
-	if (k != i && k != j)
-	  h[i][j] += weights[i][k] * elems[k];
+        if (k != i && k != j)
+          h[i][j] += weights[i][k] * elems[k];
       }
     }
   }

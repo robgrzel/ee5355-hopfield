@@ -12,8 +12,8 @@ __global__ void gpu_sparse_recall_kernel() {
 }
 
 vector<bool> GPUSparseRecall::recall(const vector<bool> &data,
-				     const vector<float> &thresholds,
-				     const vector<vector<float> > &weights) {
+                                     const vector<float> &thresholds,
+                                     const vector<vector<float> > &weights) {
   // TODO: Implement me!
   assert(false);
   return data;

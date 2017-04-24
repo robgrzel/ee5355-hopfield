@@ -33,7 +33,7 @@ int main() {
     vector<bool> key = data[i];
     for (unsigned j = 0; j < DATA_SIZE; j++) {
       if (!(rand() % CLEAR_KEY))
-	key[j] = 0;
+        key[j] = 0;
     }
     for (unsigned j = 0; j < DATA_SIZE; j++) {
       cout << key[j] << " ";
@@ -42,10 +42,10 @@ int main() {
     vector<bool> result = net.recall(key);
     for (unsigned j = 0; j < DATA_SIZE; j++) {
       if (result[j] != data[i][j])
-	cout << "\033[31m";
+        cout << "\033[31m";
       cout << result[j] << " ";
       if (result[j] != data[i][j])
-	cout << "\033[39m";
+        cout << "\033[39m";
     }
     cout << endl;
     cout << endl;

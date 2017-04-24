@@ -8,15 +8,15 @@
 using namespace std;
 
 __global__ void gpu_dense_recall_kernel(size_t size,
-					bool *data,
-					float *thresholds,
-					float *weights) {
+                                        bool *data,
+                                        float *thresholds,
+                                        float *weights) {
 
 }
 
 vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
-				    const vector<float> &thresholds,
-				    const vector<vector<float> > &weights) {
+                                    const vector<float> &thresholds,
+                                    const vector<vector<float> > &weights) {
   size_t size = data.size();
   bool dataArray[size];
   float thresholdArray[size];
@@ -30,7 +30,7 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
       weightArray[i][j] = weights[i][j];
     }
   }
-  
+
   // TODO: Implement me!
   assert(false);
   return data;

@@ -15,8 +15,8 @@ public:
   virtual ~Training() {}
   
   virtual void train(const std::vector<bool> &data,
-		     std::vector<std::vector<float> > &weights,
-		     unsigned numDataSets) = 0;
+                     std::vector<std::vector<float> > &weights,
+                     unsigned numDataSets) = 0;
   virtual std::string getName() const = 0;
 };
 
@@ -25,8 +25,8 @@ public:
   virtual ~Recall() {}
   
   virtual std::vector<bool> recall(const std::vector<bool> &data,
-				   const std::vector<float> &thresholds,
-				   const std::vector<std::vector<float> > &weights) = 0;
+                                   const std::vector<float> &thresholds,
+                                   const std::vector<std::vector<float> > &weights) = 0;
   virtual std::string getName() const = 0;
 };
 
@@ -36,8 +36,8 @@ public:
   ~CPUHebbianTraining() {};
 
   void train(const std::vector<bool> &data,
-	     std::vector<std::vector<float> > &weights,
-	     unsigned numDataSets);
+             std::vector<std::vector<float> > &weights,
+             unsigned numDataSets);
   std::string getName() const { return "CPU Hebbian"; }
 };
 
@@ -46,8 +46,8 @@ public:
   ~CPUStorkeyTraining() {};
 
   void train(const std::vector<bool> &data,
-	     std::vector<std::vector<float> > &weights,
-	     unsigned numDataSets);
+             std::vector<std::vector<float> > &weights,
+             unsigned numDataSets);
   std::string getName() const { return "CPU Storkey"; }
 };
 
@@ -57,8 +57,8 @@ public:
   ~CPUDenseRecall() {};
 
   std::vector<bool> recall(const std::vector<bool> &data,
-			   const std::vector<float> &thresholds,
-			   const std::vector<std::vector<float> > &weights);
+                           const std::vector<float> &thresholds,
+                           const std::vector<std::vector<float> > &weights);
   std::string getName() const { return "CPU dense"; }
 
   const unsigned groupSize;
@@ -69,8 +69,8 @@ public:
   ~CPUSparseRecall() {};
 
   std::vector<bool> recall(const std::vector<bool> &data,
-			   const std::vector<float> &thresholds,
-			   const std::vector<std::vector<float> > &weights);
+                           const std::vector<float> &thresholds,
+                           const std::vector<std::vector<float> > &weights);
   std::string getName() const { return "CPU sparse"; }
 };
 
@@ -79,8 +79,8 @@ public:
   ~GPUDenseRecall() {};
 
   std::vector<bool> recall(const std::vector<bool> &data,
-			   const std::vector<float> &thresholds,
-			   const std::vector<std::vector<float> > &weights);
+                           const std::vector<float> &thresholds,
+                           const std::vector<std::vector<float> > &weights);
   std::string getName() const { return "GPU dense"; }
 };
 
@@ -89,8 +89,8 @@ public:
   ~GPUSparseRecall() {};
 
   std::vector<bool> recall(const std::vector<bool> &data,
-			   const std::vector<float> &thresholds,
-			   const std::vector<std::vector<float> > &weights);
+                           const std::vector<float> &thresholds,
+                           const std::vector<std::vector<float> > &weights);
   std::string getName() const { return "GPU sparse"; }
 };
 
@@ -98,8 +98,8 @@ public:
 class HopfieldNetwork {
 public:
   HopfieldNetwork(const std::vector<float> thresholds,
-		  Recall *recallImpl = new CPUDenseRecall(),
-		  Training *trainingImpl = new CPUHebbianTraining()) :
+                  Recall *recallImpl = new CPUDenseRecall(),
+                  Training *trainingImpl = new CPUHebbianTraining()) :
     size(thresholds.size()),
     trainingImpl(trainingImpl),
     recallImpl(recallImpl),
@@ -108,9 +108,9 @@ public:
     numDataSets(0) {}
 
   HopfieldNetwork(size_t size,
-		  float threshold = DEFAULT_THRESHOLD,
-		  Recall *recallImpl = new CPUDenseRecall(),
-		  Training *trainingImpl = new CPUHebbianTraining()) :
+                  float threshold = DEFAULT_THRESHOLD,
+                  Recall *recallImpl = new CPUDenseRecall(),
+                  Training *trainingImpl = new CPUHebbianTraining()) :
     HopfieldNetwork(std::vector<float>(size, threshold), recallImpl, trainingImpl) {}
 
   ~HopfieldNetwork() {
