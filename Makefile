@@ -11,9 +11,9 @@ CUFILES	    := recall_dense.cu recall_sparse.cu
 # C/C++ source files (compiled with gcc / c++)
 CCFILES	    := training_hebbian.cpp training_storkey.cpp recall_dense.cpp recall_sparse.cpp main.cpp
 # Header files included by any of CUFILES
-CUHEADERS   := hopfield.hpp
+CUHEADERS   := hopfield.hpp TSP_graph.hpp
 # Header files included by any of CCFILES
-CCHEADERS   := hopfield.hpp
+CCHEADERS   := hopfield.hpp TSP_graph.hpp
 
 SRCDIR      := src
 ROOTDIR     := .
