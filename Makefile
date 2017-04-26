@@ -4,12 +4,12 @@
 #
 ################################################################################
 
-EXECUTABLES := test
+EXECUTABLES := simple_test test_driver
 
 # CUDA source files (compiled with cudacc)
 CUFILES	    := recall_dense.cu recall_sparse.cu
 # C/C++ source files (compiled with gcc / c++)
-CCFILES	    := training_hebbian.cpp training_storkey.cpp recall_dense.cpp recall_sparse.cpp
+CCFILES	    := hopfield.cpp training_hebbian.cpp training_storkey.cpp recall_dense.cpp recall_sparse.cpp
 # Header files included by any of CUFILES
 CUHEADERS   := hopfield.hpp
 # Header files included by any of CCFILES

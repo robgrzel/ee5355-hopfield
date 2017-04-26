@@ -22,7 +22,7 @@ int main() {
     cout << endl;
   }
   
-  HopfieldNetwork net(DATA_SIZE, 0, new CPUDenseRecall(), new CPUHebbianTraining());
+  TrainedHopfieldNetwork net(DATA_SIZE, 0, new CPUDenseRecall(), new CPUHebbianTraining());
   for (unsigned i = 0; i < NUM_TESTS; i++) {
     net.train(data[i]);
   }

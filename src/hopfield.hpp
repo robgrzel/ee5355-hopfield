@@ -3,6 +3,7 @@
 // Note: __CUDACC__ macro tests are used to exclude __device__ and __host__ specifiers if compiling with gcc
 
 #include <vector>
+#include <string>
 #include <array>
 #include <cassert>
 #include <iostream>
@@ -20,6 +21,8 @@ public:
   virtual std::string getName() const = 0;
 };
 
+Training *getTraining(const std::string &name);
+
 class Recall {
 public:
   virtual ~Recall() {}
@@ -29,6 +32,8 @@ public:
                                    const std::vector<std::vector<float> > &weights) = 0;
   virtual std::string getName() const = 0;
 };
+
+Recall *getRecall(const std::string &name);
 
 // Implementation subclasses
 class CPUHebbianTraining : public Training {
@@ -98,23 +103,52 @@ public:
 class HopfieldNetwork {
 public:
   HopfieldNetwork(const std::vector<float> thresholds,
-                  Recall *recallImpl = new CPUDenseRecall(),
-                  Training *trainingImpl = new CPUHebbianTraining()) :
+                  const std::vector<std::vector<float>> weights,
+                  Recall *recallImpl = new CPUDenseRecall()) :
     size(thresholds.size()),
-    trainingImpl(trainingImpl),
-    recallImpl(recallImpl),
-    weights(size, std::vector<float>(size, 0)),
     thresholds(thresholds),
+    weights(weights),
+    recallImpl(recallImpl) {
+    assert(weights.size() == size);
+    assert(thresholds.size() == size);
+  }
+  
+  virtual ~HopfieldNetwork() {
+    delete recallImpl;
+  }
+
+  std::vector<bool> recall(const std::vector<bool> &data) {
+    assert(data.size() == size);
+    return recallImpl->recall(data, thresholds, weights);
+  }
+
+  const size_t size;
+
+protected:
+  std::vector<float> thresholds;
+  std::vector<std::vector<float> > weights;
+  
+private:
+  Recall *recallImpl;
+};
+
+// Representation of a Hopfield network that is trained from data vectors
+class TrainedHopfieldNetwork : public HopfieldNetwork {
+public:
+  TrainedHopfieldNetwork(const std::vector<float> thresholds,
+                         Recall *recallImpl = new CPUDenseRecall(),
+                         Training *trainingImpl = new CPUHebbianTraining()) :
+    HopfieldNetwork(thresholds, std::vector<std::vector<float>>(thresholds.size(), std::vector<float>(thresholds.size(), 0)), recallImpl),
+    trainingImpl(trainingImpl),
     numDataSets(0) {}
 
-  HopfieldNetwork(size_t size,
-                  float threshold = DEFAULT_THRESHOLD,
-                  Recall *recallImpl = new CPUDenseRecall(),
-                  Training *trainingImpl = new CPUHebbianTraining()) :
-    HopfieldNetwork(std::vector<float>(size, threshold), recallImpl, trainingImpl) {}
+  TrainedHopfieldNetwork(size_t size,
+                         float threshold = DEFAULT_THRESHOLD,
+                         Recall *recallImpl = new CPUDenseRecall(),
+                         Training *trainingImpl = new CPUHebbianTraining()) :
+    TrainedHopfieldNetwork(std::vector<float>(size, threshold), recallImpl, trainingImpl) {}
 
-  ~HopfieldNetwork() {
-    delete recallImpl;
+  ~TrainedHopfieldNetwork() {
     delete trainingImpl;
   }
 
@@ -122,18 +156,8 @@ public:
     assert(data.size() == size);
     trainingImpl->train(data, weights, numDataSets++);
   }
-  std::vector<bool> recall(const std::vector<bool> &data) {
-    assert(data.size() == size);
-    return recallImpl->recall(data, thresholds, weights);
-  }
-
-  const size_t size;
+  
 private:
   Training *trainingImpl;
-  Recall *recallImpl;
-
-  std::vector<std::vector<float> > weights;
-  const std::vector<float> thresholds;
-
   unsigned numDataSets;
 };
