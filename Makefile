@@ -34,6 +34,7 @@ C_DEPS      := $(addprefix $(SRCDIR)/, $(CCHEADERS)) Makefile
 
 CUOBJS      := $(patsubst %.cu, $(OBJDIR)/%.cu.o, $(CUFILES))
 CCOBJS      := $(patsubst %.cpp, $(OBJDIR)/%.cpp.o, $(CCFILES))
+DRIVEROBJS  := $(patsubst %, $(OBJDIR)/%.cpp.o, $(EXECUTABLES))
 
 BINS        := $(addprefix $(ROOTBINDIR)/, $(EXECUTABLES))
 
@@ -61,7 +62,7 @@ endif
 
 .PHONY : all clean clobber
 
-all : $(BINS)
+all : $(BINS) $(CUOBJS) $(CCOBJS) $(DRIVEROBJS) $(OBJDIR)/device.o
 
 $(OBJDIR)/%.cu.o : $(SRCDIR)/%.cu $(CU_DEPS) | $(OBJDIR)
 	$(V)$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
