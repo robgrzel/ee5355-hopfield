@@ -4,7 +4,11 @@
 
 #ifndef POINT_H
 #define POINT_H
+#include <iostream>
+#include <cmath>
+#include <stdlib.h>
 
+using namespace std;
 // If the absolute value of the difference of two doubles is the less
 // than min_diff, then they will be considered equal.
 const double min_diff = 0.00000000001;

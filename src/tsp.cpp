@@ -4,6 +4,8 @@
 #include <vector>
 #include <cstdlib>
 #include <iostream>
+#include <cstdio>
+#include "TSP_graph.hpp"
 using namespace std;
 
 #define NUM_TESTS 5

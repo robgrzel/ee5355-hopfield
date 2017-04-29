@@ -1,6 +1,10 @@
 // Taken from http://www.cs.sfu.ca/CourseCentral/125/tjd/tsp_example.html
-#include "Point.h"
+#ifndef TSP_GRAPH_H
+#define TSP_GRAPH_H
 
+#include "Point.h"
+#include <vector>
+using namespace std;
 class TSP_graph {
 private:
   vector<Point> cities;
@@ -47,3 +51,4 @@ public:
   }
 
 }; // class TSP_graph
+#endif
