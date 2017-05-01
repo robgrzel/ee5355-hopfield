@@ -1,5 +1,5 @@
-
 #include "hopfield.hpp"
+#include "assoc_memory.hpp"
 
 #include <vector>
 #include <cstdlib>

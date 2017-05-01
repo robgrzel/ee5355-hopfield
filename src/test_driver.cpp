@@ -1,4 +1,5 @@
 #include "hopfield.hpp"
+#include "assoc_memory.hpp"
 
 #include <cstdlib>
 #include <iostream>
