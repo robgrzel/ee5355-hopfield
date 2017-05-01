@@ -17,15 +17,14 @@ int main() {
   // Initialize TSP
   TSP_graph tsp;
   int numCities = 0;
-  numCities = (rand() % 10) + 1;
+  numCities = (rand() % 3) + 1;
   for (unsigned i = 0; i < numCities; i++) {
     int x = rand() % 100;
     int y = rand() % 100;
-    tsp[i].add(x, y);
+    tsp.add(x, y);
     printf("tsp: city %d added at (%d, %d)\n", i, x, y);
   }
   printf("tsp total %d cities\n", tsp.size());
-  }
 
   /* Network is represented as a tour matrix. Each node is an entry in the matrix
 
@@ -41,13 +40,13 @@ int main() {
   double E_tsp = 0.0;
 
   vector<vector<double>> w;
-  w.resize(pow(tsp.size(),2), vector<double>(pow(tsp.size(),2), 0))
+  w.resize(pow(tsp.size(),2), vector<double>(pow(tsp.size(),2), 0));
   // calculate the weight matrix
   for (int k = 0; k < tsp.size(); ++k)
   {
     for (int i = 0; i < tsp.size(); ++i)
     {
-      for (int k_plus_1 = k; k_plus_1 < tsp.size(); ++k_plus_1)
+      for (int k_plus_1 = 0; k_plus_1 < tsp.size(); ++k_plus_1)
       {
         for (int j = 0; j < tsp.size(); ++j)
         {
@@ -58,26 +57,34 @@ int main() {
       }
     }
   }
-  // Calculate L - The length of the trip
-
-  // Calculate the constraint "one time in each city"
-
 
   // print the weight matrix
-  // cout<<"The weight matrix:"<<endl<<endl;
-  // for(j=0;j<n;j++)
-  // {
-  //   for(i=0;i<n;i++)
-  //     printf("%2d ",w[j*n+i]);
-  //   cout<<endl;
-  // }
-  // cout<<endl;
+  cout<<"The weight matrix:"<<endl<<endl;
+  for (int i = 0; i < tsp.size(); ++i)
+  {
+    for (int k = 0; k < tsp.size(); ++k)
+    {
+      printf("Node (city=%d, time=%d)\n", i, k);
+      for (int j = 0; j < tsp.size(); ++j)
+      {
+        for (int k_plus_1 = 0; k_plus_1 < tsp.size(); ++k_plus_1)
+        {
+          printf("%2f\t", w[(k * tsp.size()) + i][(k_plus_1 * tsp.size()) + j]);
+        }
+        cout<<endl;
+      }
+      cout<<endl<<endl;
+    }
+  }
   // HopfieldNetwork net(numCities, 0, new CPUDenseRecall(), new CPUHebbianTraining());
   // for (unsigned i = 0; i < NUM_TESTS; i++) {
   //   net.train(data[i]);
   // }
 
   // cout << "Recall: " << endl;
+  // Calculate L - The length of the trip
+
+  // Calculate the constraint "one time in each city"
 
   // for (unsigned i = 0; i < NUM_TESTS; i++) {
   //   vector<bool> key = data[i];
