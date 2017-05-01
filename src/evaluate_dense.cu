@@ -17,8 +17,6 @@ __global__ void gpu_dense_recall_kernel(size_t size,
   bool update;
 
   bool stableT = true;
-  
-  printf("%d !!!!\n", i);
 
   if (i < size) {
     for (size_t k = 0; k < size; ++k) {
@@ -29,11 +27,9 @@ __global__ void gpu_dense_recall_kernel(size_t size,
     }
 
     update = value > thresholds[i];
-    printf("%d : %f\n", i, value);
     if (update != state[i]) {
       stableT = false;
       state[i] = update;
-      printf("Updating %d to %d\n", i, update);
     }
 
     //TODO: use reduction to find stable
@@ -43,9 +39,9 @@ __global__ void gpu_dense_recall_kernel(size_t size,
 
 GPUDenseHopfieldNetwork::GPUDenseHopfieldNetwork(const std::vector<float> &thresholds,
                                                  const std::vector<std::vector<float>> &weights) :
-    HopfieldNetwork(thresholds, weights) {
-  assert(cudaMalloc((void**) &thresholdsDev, sizeof(float) * size) == cudaSuccess);
-  assert(cudaMalloc((void**) &weights, sizeof(float) * size * size) == cudaSuccess);
+  HopfieldNetwork(thresholds, weights) {
+  cudaCheck(cudaMalloc((void**) &thresholdsDev, sizeof(float) * size));
+  cudaCheck(cudaMalloc((void**) &weightsDev, sizeof(float) * size * size));
 
   float (*weightArray)[size] = (float(*)[size])new float[size * size];
   for (size_t i = 0; i < size; ++i) {
@@ -54,10 +50,10 @@ GPUDenseHopfieldNetwork::GPUDenseHopfieldNetwork(const std::vector<float> &thres
     }
   }
 
-  assert(cudaMemcpy(thresholdsDev, thresholds.data(), size * sizeof(float),
-                    cudaMemcpyHostToDevice) == cudaSuccess);
-  assert(cudaMemcpy(weightsDev, weightArray, size * size * sizeof(float),
-                    cudaMemcpyHostToDevice) == cudaSuccess);
+  cudaCheck(cudaMemcpy(thresholdsDev, thresholds.data(), size * sizeof(float),
+                       cudaMemcpyHostToDevice));
+  cudaCheck(cudaMemcpy(weightsDev, weightArray, size * size * sizeof(float),
+                       cudaMemcpyHostToDevice));
   
   delete[] weightArray; 
 }
@@ -78,35 +74,32 @@ vector<bool> GPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
 
   if (size % numThreads) numBlocks++;
 
-  assert(cudaMalloc((void**) &stateDev, sizeof(bool) * size) == cudaSuccess);
-  assert(cudaMalloc((void**) &stableDev, sizeof(bool)) == cudaSuccess);
+  cudaCheck(cudaMalloc((void**) &stateDev, sizeof(bool) * size));
+  cudaCheck(cudaMalloc((void**) &stableDev, sizeof(bool)));
 
-  assert(cudaMemcpy(stateDev, data.data(), size * sizeof(bool),
-                    cudaMemcpyHostToDevice) == cudaSuccess);
+  copy(data.begin(), data.end(), dataArray);
+  cudaCheck(cudaMemcpy(stateDev, dataArray, size * sizeof(bool),
+                       cudaMemcpyHostToDevice));
 
   do {
     stable = true;
-    assert(cudaMemcpy(stableDev, &stable, sizeof(bool),
-                      cudaMemcpyHostToDevice) == cudaSuccess);
+    cudaCheck(cudaMemcpy(stableDev, &stable, sizeof(bool),
+                         cudaMemcpyHostToDevice));
 
     gpu_dense_recall_kernel<<< numBlocks, numThreads >>>
       (size, stateDev, thresholdsDev, weightsDev, stableDev);
-    assert(cudaDeviceSynchronize() == cudaSuccess);
+    cudaCheck(cudaDeviceSynchronize());
 
-    assert(cudaMemcpy(&stable, stableDev, sizeof(bool),
-                      cudaMemcpyDeviceToHost) == cudaSuccess);
+    cudaCheck(cudaMemcpy(&stable, stableDev, sizeof(bool),
+                         cudaMemcpyDeviceToHost));
   } while (!stable);
 
-  assert(cudaMemcpy(dataArray, stateDev, size * sizeof(bool),
-                    cudaMemcpyDeviceToHost) == cudaSuccess);
+  cudaCheck(cudaMemcpy(dataArray, stateDev, size * sizeof(bool),
+                       cudaMemcpyDeviceToHost));
 
-  assert(cudaDeviceSynchronize() == cudaSuccess);
+  cudaCheck(cudaDeviceSynchronize());
   
   vector<bool> state(dataArray, dataArray + size);
-  /*for (size_t i = 0; i < size; ++i) {
-    cout << state[i] << " ";
-  }
-  cout << endl;*/
 
   cudaFree(stateDev);
   cudaFree(stableDev);
