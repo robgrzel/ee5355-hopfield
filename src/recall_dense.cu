@@ -44,7 +44,7 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
 
   bool dataArray[size];
   float thresholdArray[size];
-  float weightArray[size][size];
+  float (*weightArray)[size] = (float(*)[size])new float[size * size];
 
   bool * stateDev;
   float * thresholdDev;
@@ -100,6 +100,8 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
   for (size_t i = 0; i < size; ++i) {
     state[i] = dataArray[i];
   }
+
+  delete[] weightArray;
 
   cudaFree(stateDev);
   cudaFree(thresholdDev);

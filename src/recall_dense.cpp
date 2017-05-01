@@ -16,7 +16,7 @@ vector<bool> CPUDenseRecall::recall(const vector<bool> &data,
     stable = true;
 #pragma omp parallel for
     for (size_t i = 0; i < size; i++) {
-      /*for (unsigned j = 0; j < size; j++) {
+      /*for (size_t j = 0; j < size; j++) {
         cout << state[j] << " ";
         }
         cout << endl;*/
