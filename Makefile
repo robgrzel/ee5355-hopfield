@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-EXECUTABLES := test
+EXECUTABLES := tsp
 
 # CUDA source files (compiled with cudacc)
 CUFILES	    := recall_dense.cu recall_sparse.cu
