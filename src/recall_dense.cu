@@ -65,6 +65,12 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
     }
   }
 
+  assert(cudaMalloc((void**) &stateDev, sizeof(bool) * size) == cudaSuccess);
+  assert(cudaMalloc((void**) &thresholdDev, sizeof(bool) * size)
+         == cudaSuccess);
+  assert(cudaMalloc((void**) &weightDev, sizeof(bool) * size * size)
+         == cudaSuccess);
+
   assert(cudaMemcpy(stateDev, dataArray, size * sizeof(bool),
                     cudaMemcpyHostToDevice) == cudaSuccess);
 
@@ -94,6 +100,10 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
   for (size_t i = 0; i < size; ++i) {
     state[i] = dataArray[i];
   }
+
+  cudaFree(stateDev);
+  cudaFree(thresholdDev);
+  cudaFree(weightDev);
 
   return state;
 }
