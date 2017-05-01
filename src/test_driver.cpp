@@ -13,12 +13,12 @@ using namespace std;
 
 int main(int argc, const char *argv[]) {
   if (argc < 2 || argc > 5) {
-    cerr << "Usage: " << argv[0] << " <recall algorithm> <data size>(=" << DEFAULT_SIZE << ") <# of data vectors>(=" << DEFAULT_NUM_VECTORS << ") <fraction of vector included in key>(=" << DEFAULT_KEY_SIZE_PROP << ")" << endl;
+    cerr << "Usage: " << argv[0] << " <evaluation algorithm> <data size>(=" << DEFAULT_SIZE << ") <# of data vectors>(=" << DEFAULT_NUM_VECTORS << ") <fraction of vector included in key>(=" << DEFAULT_KEY_SIZE_PROP << ")" << endl;
     exit(1);
   }
 
-  Recall *recall = getRecall(string(argv[1]));
-  cout << " Recall algorithm: " << argv[1] << endl;
+  Evaluation *evaluation = getEvaluation(string(argv[1]));
+  cout << " Evaluation algorithm: " << argv[1] << endl;
   size_t size = DEFAULT_SIZE;
   if (argc >= 3)
     size = atoi(argv[2]);
@@ -49,9 +49,9 @@ int main(int argc, const char *argv[]) {
 
   cout << "Training network... " << flush;
   t1 = chrono::high_resolution_clock::now();
-  TrainedHopfieldNetwork net(size, DEFAULT_THRESHOLD, recall, new CPUHebbianTraining());
+  AssociativeMemory mem(size, DEFAULT_THRESHOLD, new CPUHebbianTraining(), evaluation);
   for (size_t i = 0; i < num_vectors; i++) {
-    net.train(data[i]);
+    mem.store(data[i]);
   }
   t2 = chrono::high_resolution_clock::now();
   diff = t2 - t1;
@@ -61,7 +61,7 @@ int main(int argc, const char *argv[]) {
   t1 = chrono::high_resolution_clock::now();
   vector<vector<bool>> results(num_vectors);
   for (size_t i = 0; i < num_vectors; i++) {
-    results[i] = net.recall(keys[i]);
+    results[i] = mem.recall(keys[i]);
   }
   t2 = chrono::high_resolution_clock::now();
   diff = t2 - t1;

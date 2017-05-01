@@ -6,11 +6,9 @@
 #include <iostream>
 using namespace std;
 
-vector<bool> CPUDenseRecall::recall(const vector<bool> &data,
-                                    const vector<float> &thresholds,
-                                    const vector<vector<float> > &weights) {
+vector<bool> CPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
+  assert(data.size() == size);
   vector<bool> state = data;
-  size_t size = data.size();
   bool stable;
   do {
     stable = true;

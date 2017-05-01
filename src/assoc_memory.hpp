@@ -45,32 +45,58 @@ public:
 Training *getTraining(const std::string &name);
 
 // Representation of a Hopfield network that is trained from data vectors
-class TrainedHopfieldNetwork : public HopfieldNetwork {
+class AssociativeMemory {
 public:
-  TrainedHopfieldNetwork(const std::vector<float> &thresholds,
-                         Recall *recallImpl = new CPUDenseRecall(),
-                         Training *trainingImpl = new CPUHebbianTraining()) :
-    HopfieldNetwork(thresholds, std::vector<std::vector<float>>(thresholds.size(), std::vector<float>(thresholds.size(), 0)), recallImpl),
+  AssociativeMemory(const std::vector<float> &thresholds,
+                    Training *trainingImpl = new CPUHebbianTraining,
+                    Evaluation *evaluationImpl = new CPUDenseEvaluation) :
+    thresholds(thresholds),
+    weights(thresholds.size(), std::vector<float>(thresholds.size())),
     trainingImpl(trainingImpl),
+    evaluationImpl(evaluationImpl),
+    network(NULL),
     numDataSets(0) {}
 
-  TrainedHopfieldNetwork(size_t size,
-                         float threshold = DEFAULT_THRESHOLD,
-                         Recall *recallImpl = new CPUDenseRecall(),
-                         Training *trainingImpl = new CPUHebbianTraining()) :
-    TrainedHopfieldNetwork(std::vector<float>(size, threshold), recallImpl, trainingImpl) {}
+  AssociativeMemory(size_t size,
+                    float threshold = DEFAULT_THRESHOLD,
+                    Training *trainingImpl = new CPUHebbianTraining,
+                    Evaluation *evaluationImpl = new CPUDenseEvaluation) :
+    AssociativeMemory(std::vector<float>(size, threshold), trainingImpl, evaluationImpl) {}
 
-  ~TrainedHopfieldNetwork() {
+  ~AssociativeMemory() {
     delete trainingImpl;
+    delete evaluationImpl;
+    if (network != NULL)
+      delete network;
   }
 
-  void train(const std::vector<bool> &data) {
+  void store(const std::vector<bool> &data) {
     assert(data.size() == size);
+    
+    if (network != NULL)
+      delete network;
+    network = NULL;
+    
     trainingImpl->train(data, weights, numDataSets++);
+  }
+
+  std::vector<bool> recall(const std::vector<bool> &data) {
+    assert(data.size() == size);
+    
+    if (network == NULL)
+      network = evaluationImpl->makeHopfieldNetwork(thresholds, weights);
+    
+    return network->evaluate(data);
   }
   
 private:
+  std::vector<float> thresholds;
+  std::vector<std::vector<float> > weights;
+    
   Training *trainingImpl;
-  unsigned numDataSets;
+  Evaluation *evaluationImpl;
+  HopfieldNetwork *network;
+
+  size_t numDataSets;
 };
 

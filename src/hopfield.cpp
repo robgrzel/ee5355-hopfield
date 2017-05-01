@@ -4,17 +4,17 @@
 #include <string>
 using namespace std;
 
-Recall *getRecall(const string &name) {
+Evaluation *getEvaluation(const string &name) {
   if (name == "cpu_dense")
-    return new CPUDenseRecall;
+    return new CPUDenseEvaluation;
   else if (name == "cpu_sparse")
-    return new CPUSparseRecall;
+    return new CPUSparseEvaluation;
   else if (name == "gpu_dense")
-    return new GPUDenseRecall;
+    return new GPUDenseEvaluation;
   else if (name == "gpu_sparse")
-    return new GPUSparseRecall;
+    return new GPUSparseEvaluation;
   else {
-    cerr << "Unknown recall algorithm " << name << endl;
+    cerr << "Unknown evaluation algorithm " << name << endl;
     exit(1);
   }
 }

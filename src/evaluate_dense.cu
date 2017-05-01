@@ -17,6 +17,8 @@ __global__ void gpu_dense_recall_kernel(size_t size,
   bool update;
 
   bool stableT = true;
+  
+  printf("%d !!!!\n", i);
 
   if (i < size) {
     for (size_t k = 0; k < size; ++k) {
@@ -27,20 +29,30 @@ __global__ void gpu_dense_recall_kernel(size_t size,
     }
 
     update = value > thresholds[i];
-    stableT &= update == state[i];
-
-    state[i] = update;
+    printf("%d : %f\n", i, value);
+    if (update != state[i]) {
+      stableT = false;
+      state[i] = update;
+      printf("Updating %d to %d\n", i, update);
+    }
 
     //TODO: use reduction to find stable
     atomicAnd((int *) stable, (int) stableT);
   }
 }
 
-vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
-                                    const vector<float> &thresholds,
-                                    const vector<vector<float> > &weights) {
-  size_t size = data.size();
-  bool stable;
+GPUDenseHopfieldNetwork::GPUDenseHopfieldNetwork(const std::vector<float> &thresholds,
+                                                 const std::vector<std::vector<float>> &weights) :
+    HopfieldNetwork(thresholds, weights) {
+  // TODO
+}
+
+GPUDenseHopfieldNetwork::~GPUDenseHopfieldNetwork() {
+  // TODO
+}
+
+vector<bool> GPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
+  /*bool stable;
 
   bool dataArray[size];
   float thresholdArray[size];
@@ -57,12 +69,14 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
 
   for (size_t i = 0; i < size; ++i) {
     dataArray[i] = data[i];
+    cout << data[i] << " ";
     thresholdArray[i] = thresholds[i];
 
     for (size_t j = 0; j < size; ++j) {
       weightArray[i][j] = weights[i][j];
     }
   }
+  cout << endl;
 
   assert(cudaMalloc((void**) &stateDev, sizeof(bool) * size) == cudaSuccess);
   assert(cudaMalloc((void**) &thresholdDev, sizeof(float) * size)
@@ -96,10 +110,11 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
 
   assert(cudaDeviceSynchronize() == cudaSuccess);
   
-  vector<bool> state(size);
+  vector<bool> state(dataArray, dataArray + size);
   for (size_t i = 0; i < size; ++i) {
-    state[i] = dataArray[i];
+    cout << state[i] << " ";
   }
+  cout << endl;
 
   delete[] weightArray;
 
@@ -108,6 +123,6 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
   cudaFree(weightDev);
   cudaFree(stableDev);
 
-  return state;
+  return state;*/
 }
 

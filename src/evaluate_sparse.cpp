@@ -8,10 +8,18 @@ using namespace std;
 #define WEIGHT_THRESHOLD 0.05
 
 
-vector<bool> CPUSparseRecall::recall(const vector<bool> &data,
-                                     const vector<float> &thresholds,
-                                     const vector<vector<float> > &weights) {
-  // Converting dense weight matrix to sparse matrix
+CPUSparseHopfieldNetwork::CPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
+                                                   const std::vector<std::vector<float>> &weights) :
+    HopfieldNetwork(thresholds, weights) {
+  // TODO
+}
+
+CPUSparseHopfieldNetwork::~CPUSparseHopfieldNetwork() {
+  // TODO
+}
+
+vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
+  /*  // Converting dense weight matrix to sparse matrix
   vector<bool> state = data;
   size_t size = data.size();
   int w_size = (int)size;
@@ -47,7 +55,7 @@ vector<bool> CPUSparseRecall::recall(const vector<bool> &data,
  
 
  	//Sparse matrix Debuging code
-   printf("Percentage of NNZ elements in weight matrix using threshold %f = %f\n", WEIGHT_THRESHOLD,(100.00*nnz/(w_size*w_size)));
+        printf("Percentage of NNZ elements in weight matrix using threshold %f = %f\n", WEIGHT_THRESHOLD,(100.00*nnz/(w_size*w_size)));*/
 /*
    for (int f=0; f<nnz;++f)
       printf("%f  ",sW_nnz[f]);
@@ -61,7 +69,7 @@ vector<bool> CPUSparseRecall::recall(const vector<bool> &data,
 
 
 */
-
+/*
   bool stable;
   do {
     stable = true;
@@ -84,6 +92,6 @@ vector<bool> CPUSparseRecall::recall(const vector<bool> &data,
       state[i] = update;
     }
   } while (!stable);
-  return state;
+  return state;*/
 }
 

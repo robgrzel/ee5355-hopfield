@@ -17,7 +17,6 @@ public:
   
   virtual ~HopfieldNetwork() {}
   
-  virtual std::string getName() const = 0;
   virtual std::vector<bool> evaluate(const std::vector<bool> &data) = 0;
 
   const size_t size;
@@ -25,13 +24,13 @@ public:
 
 class CPUDenseHopfieldNetwork : public HopfieldNetwork {
 public:
-  HopfieldNetwork(const std::vector<float> &thresholds,
-                  const std::vector<std::vector<float>> &weights) :
+  CPUDenseHopfieldNetwork(const std::vector<float> &thresholds,
+                          const std::vector<std::vector<float>> &weights) :
     HopfieldNetwork(thresholds, weights),
     thresholds(thresholds),
     weights(weights) {}
+  ~CPUDenseHopfieldNetwork() {}
   
-  std::string getName() const { return "CPU dense"; }
   std::vector<bool> evaluate(const std::vector<bool> &data);
 
 protected:
@@ -41,10 +40,9 @@ protected:
 
 class GPUDenseHopfieldNetwork : public HopfieldNetwork {
 public:
-  DenseHopfieldNetwork(const std::vector<float> &thresholds,
-                       const std::vector<std::vector<float>> &weights) :
-    HopfieldNetwork(thresholds, weights)
-  ~DenseHopfieldNetwork();
+  GPUDenseHopfieldNetwork(const std::vector<float> &thresholds,
+                          const std::vector<std::vector<float>> &weights);
+  ~GPUDenseHopfieldNetwork();
   
   std::string getName() const { return "GPU dense"; }
   std::vector<bool> evaluate(const std::vector<bool> &data);
@@ -55,11 +53,11 @@ protected:
   float *weights;    // size * size
 };
 
-class CPUSparseHopfieldNetwork : public SparseHopfieldNetwork {
+class CPUSparseHopfieldNetwork : public HopfieldNetwork {
 public:
   CPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
-                           const std::vector<std::vector<float>> &weights) :
-    SparseHopfieldNetwork(thresholds, weights) {}
+                           const std::vector<std::vector<float>> &weights);
+  ~CPUSparseHopfieldNetwork();
   
   std::string getName() const { return "CPU sparse"; }
   std::vector<bool> evaluate(const std::vector<bool> &data);
@@ -70,12 +68,11 @@ protected:
   //std::vector<std::vector<float> > weights;
 };
 
-class GPUSparseHopfieldNetwork : public SparseHopfieldNetwork {
+class GPUSparseHopfieldNetwork : public HopfieldNetwork {
 public:
-  CPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
-                           const std::vector<std::vector<float>> &weights) :
-    SparseHopfieldNetwork(thresholds, weights);
-  ~SparseHopfieldNetwork();
+  GPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
+                           const std::vector<std::vector<float>> &weights);
+  ~GPUSparseHopfieldNetwork();
   
   std::string getName() const { return "GPU sparse"; }
   std::vector<bool> evaluate(const std::vector<bool> &data);
@@ -86,7 +83,55 @@ protected:
   //float *weights;    // size * size
 };
 
-// Factory function for Hopfield networks
-HopfieldNetwork *makeHopfieldNetwork(std::string name,
-                                     const std::vector<float> &thresholds,
-                                     const std::vector<std::vector<float>> &weights);
+// Factory class for Hopfield networks
+class Evaluation {
+public:
+  virtual ~Evaluation() {}
+
+  virtual HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                               const std::vector<std::vector<float>> &weights) = 0;
+  virtual std::string getName() const = 0;
+};
+
+// Implementation subclasses
+class CPUDenseEvaluation : public Evaluation {
+  ~CPUDenseEvaluation() {}
+  
+  HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                       const std::vector<std::vector<float>> &weights) {
+    return new CPUDenseHopfieldNetwork(thresholds, weights);
+  }
+  std::string getName() const { return "CPU dense"; }
+};
+
+class GPUDenseEvaluation : public Evaluation {
+  ~GPUDenseEvaluation() {}
+  
+  HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                       const std::vector<std::vector<float>> &weights) {
+    return new GPUDenseHopfieldNetwork(thresholds, weights);
+  }
+  std::string getName() const { return "CPU dense"; }
+};
+
+class CPUSparseEvaluation : public Evaluation {
+  ~CPUSparseEvaluation() {}
+  
+  HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                       const std::vector<std::vector<float>> &weights) {
+    return new CPUSparseHopfieldNetwork(thresholds, weights);
+  }
+  std::string getName() const { return "CPU sparse"; }
+};
+
+class GPUSparseEvaluation : public Evaluation {
+  ~GPUSparseEvaluation() {}
+  
+  HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                       const std::vector<std::vector<float>> &weights) {
+    return new GPUSparseHopfieldNetwork(thresholds, weights);
+  }
+  std::string getName() const { return "CPU sparse"; }
+};
+
+Evaluation *getEvaluation(const std::string &name);

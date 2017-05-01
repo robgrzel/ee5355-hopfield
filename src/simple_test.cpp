@@ -22,9 +22,9 @@ int main() {
     cout << endl;
   }
   
-  TrainedHopfieldNetwork net(DATA_SIZE, 0, new CPUDenseRecall(), new CPUHebbianTraining());
+  AssociativeMemory mem(DATA_SIZE, 0, new CPUHebbianTraining, new CPUDenseEvaluation);
   for (unsigned i = 0; i < NUM_TESTS; i++) {
-    net.train(data[i]);
+    mem.store(data[i]);
   }
   
   cout << "Recall: " << endl;
@@ -39,7 +39,7 @@ int main() {
       cout << key[j] << " ";
     }
     cout << "->" << endl;
-    vector<bool> result = net.recall(key);
+    vector<bool> result = mem.recall(key);
     for (unsigned j = 0; j < DATA_SIZE; j++) {
       if (result[j] != data[i][j])
         cout << "\033[31m";
