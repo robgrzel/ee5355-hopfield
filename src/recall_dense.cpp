@@ -1,4 +1,3 @@
-
 #include "hopfield.hpp"
 
 #include <cstdint>
@@ -15,30 +14,23 @@ vector<bool> CPUDenseRecall::recall(const vector<bool> &data,
   bool stable;
   do {
     stable = true;
-    for (size_t i = 0; i < size; i += groupSize) {
+#pragma omp parallel for
+    for (size_t i = 0; i < size; i++) {
       /*for (unsigned j = 0; j < size; j++) {
         cout << state[j] << " ";
         }
         cout << endl;*/
-      bool updates[groupSize];
-#pragma omp parallel for
-      for (size_t j = 0; j < groupSize; j++) {
-        if (i + j < size) {
-          float value = 0;
-          for (size_t k = 0; k < size; k++) {
-            if (state[k])
-              value += weights[i + j][k];
-            else
-              value -= weights[i + j][k];
-          }
-          updates[j] = value > thresholds[i + j];
+      float value = 0;
+      for (size_t k = 0; k < size; k++) {
+        if (state[k])
+          value += weights[i][k];
+        else
+          value -= weights[i][k];
+      }
+      bool update = value > thresholds[i];
 #pragma omp atomic
-          stable &= updates[j] == state[i + j];
-        }
-      }
-      for (size_t j = 0; j < groupSize && i + j < size; j++) {
-        state[i + j] = updates[j];
-      }
+      stable &= update == state[i];
+      state[i] = update;
     }
   } while (!stable);
   return state;

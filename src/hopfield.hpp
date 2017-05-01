@@ -22,15 +22,13 @@ Recall *getRecall(const std::string &name);
 // Implementation subclasses
 class CPUDenseRecall : public Recall {
 public:
-  CPUDenseRecall(unsigned groupSize=8) : groupSize(groupSize) {};
+  CPUDenseRecall() {};
   ~CPUDenseRecall() {};
 
   std::vector<bool> recall(const std::vector<bool> &data,
                            const std::vector<float> &thresholds,
                            const std::vector<std::vector<float> > &weights);
   std::string getName() const { return "CPU dense"; }
-
-  const unsigned groupSize;
 };
 
 class CPUSparseRecall : public Recall {
