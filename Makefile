@@ -44,7 +44,7 @@ NVCCFLAGS   += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code
 CXX         := g++
 CXXFLAGS    += -fopenmp -fno-strict-aliasing -m64 -std=gnu++11 -Wall -Wextra -DVERBOSE -DUNIX
 
-LIB         += -lgomp -lcudart
+LIB         += -lgomp -lcudart -lcusparse
 
 ifeq ($(dbg),1)
   CXXFLAGS  += -g3 -ggdb
