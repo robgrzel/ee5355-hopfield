@@ -1,5 +1,4 @@
-
-#include "hopfield.hpp"
+#include "assoc_memory.hpp"
 
 #include <cstdint>
 #include <cassert>

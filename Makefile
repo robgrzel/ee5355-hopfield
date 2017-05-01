@@ -4,16 +4,16 @@
 #
 ################################################################################
 
-EXECUTABLES := tsp
+EXECUTABLES := simple_test test_driver tsp
 
 # CUDA source files (compiled with cudacc)
 CUFILES	    := recall_dense.cu recall_sparse.cu
 # C/C++ source files (compiled with gcc / c++)
-CCFILES	    := training_hebbian.cpp training_storkey.cpp recall_dense.cpp recall_sparse.cpp
+CCFILES	    := hopfield.cpp recall_dense.cpp recall_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp
 # Header files included by any of CUFILES
-CUHEADERS   := hopfield.hpp TSP_graph.hpp
+CUHEADERS   := hopfield.hpp assoc_memory.hpp TSP_graph.hpp
 # Header files included by any of CCFILES
-CCHEADERS   := hopfield.hpp TSP_graph.hpp
+CCHEADERS   := hopfield.hpp assoc_memory.hpp TSP_graph.hpp
 
 SRCDIR      := src
 ROOTDIR     := .
@@ -34,6 +34,7 @@ C_DEPS      := $(addprefix $(SRCDIR)/, $(CCHEADERS)) Makefile
 
 CUOBJS      := $(patsubst %.cu, $(OBJDIR)/%.cu.o, $(CUFILES))
 CCOBJS      := $(patsubst %.cpp, $(OBJDIR)/%.cpp.o, $(CCFILES))
+DRIVEROBJS  := $(patsubst %, $(OBJDIR)/%.cpp.o, $(EXECUTABLES))
 
 BINS        := $(addprefix $(ROOTBINDIR)/, $(EXECUTABLES))
 
@@ -61,7 +62,7 @@ endif
 
 .PHONY : all clean clobber
 
-all : $(BINS)
+all : $(BINS) $(CUOBJS) $(CCOBJS) $(DRIVEROBJS) $(OBJDIR)/device.o
 
 $(OBJDIR)/%.cu.o : $(SRCDIR)/%.cu $(CU_DEPS) | $(OBJDIR)
 	$(V)$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
