@@ -6,13 +6,16 @@
 #include <cassert>
 #include <iostream>
 
-// Representation of a Hopfield networl
+#define _unused(x) ((void)(x))
+
+// Representation of a Hopfield network
 class HopfieldNetwork {
 public:
   HopfieldNetwork(const std::vector<float> &thresholds,
                   const std::vector<std::vector<float>> &weights) :
     size(thresholds.size()) {
     assert(weights.size() == size);
+    _unused(weights); // Suppress warning in release build
   }
   
   virtual ~HopfieldNetwork() {}
