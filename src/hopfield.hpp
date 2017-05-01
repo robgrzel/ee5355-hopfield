@@ -6,90 +6,87 @@
 #include <cassert>
 #include <iostream>
 
-// Strategy abstract class for various implementations of recall
-class Recall {
-public:
-  virtual ~Recall() {}
-  
-  virtual std::vector<bool> recall(const std::vector<bool> &data,
-                                   const std::vector<float> &thresholds,
-                                   const std::vector<std::vector<float> > &weights) = 0;
-  virtual std::string getName() const = 0;
-};
-
-Recall *getRecall(const std::string &name);
-
-// Implementation subclasses
-class CPUDenseRecall : public Recall {
-public:
-  CPUDenseRecall() {};
-  ~CPUDenseRecall() {};
-
-  std::vector<bool> recall(const std::vector<bool> &data,
-                           const std::vector<float> &thresholds,
-                           const std::vector<std::vector<float> > &weights);
-  std::string getName() const { return "CPU dense"; }
-};
-
-class CPUSparseRecall : public Recall {
-public:
-  ~CPUSparseRecall() {};
-
-  std::vector<bool> recall(const std::vector<bool> &data,
-                           const std::vector<float> &thresholds,
-                           const std::vector<std::vector<float> > &weights);
-  std::string getName() const { return "CPU sparse"; }
-};
-
-class GPUDenseRecall : public Recall {
-public:
-  ~GPUDenseRecall() {};
-
-  std::vector<bool> recall(const std::vector<bool> &data,
-                           const std::vector<float> &thresholds,
-                           const std::vector<std::vector<float> > &weights);
-  std::string getName() const { return "GPU dense"; }
-};
-
-class GPUSparseRecall : public Recall {
-public:
-  ~GPUSparseRecall() {};
-
-  std::vector<bool> recall(const std::vector<bool> &data,
-                           const std::vector<float> &thresholds,
-                           const std::vector<std::vector<float> > &weights);
-  std::string getName() const { return "GPU sparse"; }
-};
-
-// Representation of a Hopfield network
+// Representation of a Hopfield networl
 class HopfieldNetwork {
 public:
   HopfieldNetwork(const std::vector<float> &thresholds,
-                  const std::vector<std::vector<float>> &weights,
-                  Recall *recallImpl = new CPUDenseRecall()) :
-    size(thresholds.size()),
-    thresholds(thresholds),
-    weights(weights),
-    recallImpl(recallImpl) {
+                  const std::vector<std::vector<float>> &weights) :
+    size(thresholds.size()) {
     assert(weights.size() == size);
-    assert(thresholds.size() == size);
   }
   
-  virtual ~HopfieldNetwork() {
-    delete recallImpl;
-  }
-
-  std::vector<bool> recall(const std::vector<bool> &data) {
-    assert(data.size() == size);
-    return recallImpl->recall(data, thresholds, weights);
-  }
+  virtual ~HopfieldNetwork() {}
+  
+  virtual std::string getName() const = 0;
+  virtual std::vector<bool> evaluate(const std::vector<bool> &data) = 0;
 
   const size_t size;
+};
+
+class CPUDenseHopfieldNetwork : public HopfieldNetwork {
+public:
+  HopfieldNetwork(const std::vector<float> &thresholds,
+                  const std::vector<std::vector<float>> &weights) :
+    HopfieldNetwork(thresholds, weights),
+    thresholds(thresholds),
+    weights(weights) {}
+  
+  std::string getName() const { return "CPU dense"; }
+  std::vector<bool> evaluate(const std::vector<bool> &data);
 
 protected:
   std::vector<float> thresholds;
   std::vector<std::vector<float> > weights;
-  
-private:
-  Recall *recallImpl;
 };
+
+class GPUDenseHopfieldNetwork : public HopfieldNetwork {
+public:
+  DenseHopfieldNetwork(const std::vector<float> &thresholds,
+                       const std::vector<std::vector<float>> &weights) :
+    HopfieldNetwork(thresholds, weights)
+  ~DenseHopfieldNetwork();
+  
+  std::string getName() const { return "GPU dense"; }
+  std::vector<bool> evaluate(const std::vector<bool> &data);
+
+protected:
+  // Device memory
+  float *thresholds; // size
+  float *weights;    // size * size
+};
+
+class CPUSparseHopfieldNetwork : public SparseHopfieldNetwork {
+public:
+  CPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
+                           const std::vector<std::vector<float>> &weights) :
+    SparseHopfieldNetwork(thresholds, weights) {}
+  
+  std::string getName() const { return "CPU sparse"; }
+  std::vector<bool> evaluate(const std::vector<bool> &data);
+
+protected:
+  // TODO: Fill in representation of a sparse Hopfield network for the host
+  //std::vector<float> thresholds;
+  //std::vector<std::vector<float> > weights;
+};
+
+class GPUSparseHopfieldNetwork : public SparseHopfieldNetwork {
+public:
+  CPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
+                           const std::vector<std::vector<float>> &weights) :
+    SparseHopfieldNetwork(thresholds, weights);
+  ~SparseHopfieldNetwork();
+  
+  std::string getName() const { return "GPU sparse"; }
+  std::vector<bool> evaluate(const std::vector<bool> &data);
+  
+protected:
+  // TODO: Fill in representation of a sparse Hopfield network for the device
+  //float *thresholds; // size
+  //float *weights;    // size * size
+};
+
+// Factory function for Hopfield networks
+HopfieldNetwork *makeHopfieldNetwork(std::string name,
+                                     const std::vector<float> &thresholds,
+                                     const std::vector<std::vector<float>> &weights);
