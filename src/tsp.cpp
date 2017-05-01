@@ -8,20 +8,60 @@
 #include "TSP_graph.hpp"
 using namespace std;
 
-#define NUM_TESTS 5
+#define GAMMA 1
+#define THRESHOLD (-GAMMA/2)
 
 int main() {
-  printf("Training patterns: \n");
-  
   srand(time(NULL)); // use current time to seed random number generator
-  
-  // Create a random pattern matrix to learn.
-  // Each row is a separate pattern to learn (n bits each).
 
-  // max capacity (number of patterns it can learn) of Hopfield network is 0.138N (N: number of neurons)
-  // https://en.wikipedia.org/wiki/Hopfield_network#Capacity
+  // Initialize TSP
+  TSP_graph tsp;
+  int numCities = 0;
+  numCities = (rand() % 10) + 1;
+  for (unsigned i = 0; i < numCities; i++) {
+    int x = rand() % 100;
+    int y = rand() % 100;
+    tsp[i].add(x, y);
+    printf("tsp: city %d added at (%d, %d)\n", i, x, y);
+  }
+  printf("tsp total %d cities\n", tsp.size());
+  }
 
+  /* Network is represented as a tour matrix. Each node is an entry in the matrix
+
+          | 1 2 ... n (Time)
+    ------+-----------------
+     S1   |
+     S2   |
+     ...  |
+     Sn   |
+    (City)
+
+  */
+  double E_tsp = 0.0;
+
+  vector<vector<double>> w;
+  w.resize(pow(tsp.size(),2), vector<double>(pow(tsp.size(),2), 0))
   // calculate the weight matrix
+  for (int k = 0; k < tsp.size(); ++k)
+  {
+    for (int i = 0; i < tsp.size(); ++i)
+    {
+      for (int k_plus_1 = k; k_plus_1 < tsp.size(); ++k_plus_1)
+      {
+        for (int j = 0; j < tsp.size(); ++j)
+        {
+          double t = ((i == j) || (k == k_plus_1))?0:-GAMMA;
+
+          w[(k * tsp.size()) + i][(k_plus_1 * tsp.size()) + j] = -tsp.dist_between(i, j) + t;
+        }
+      }
+    }
+  }
+  // Calculate L - The length of the trip
+
+  // Calculate the constraint "one time in each city"
+
 
   // print the weight matrix
   // cout<<"The weight matrix:"<<endl<<endl;
@@ -32,21 +72,6 @@ int main() {
   //   cout<<endl;
   // }
   // cout<<endl;
-
-  // Initialize TSP
-  int numCities = 0;
-  vector<TSP_graph> data(NUM_TESTS);
-  for (unsigned i = 0; i < NUM_TESTS; i++) {
-    numCities = (rand() % 10) + 1;
-    for (unsigned j = 0; j < numCities; j++) {
-      int x = rand() % 100;
-      int y = rand() % 100;
-      data[i].add(x, y);
-      printf("data[%d]: city %d added at (%d, %d)\n", i, j, x, y);
-    }
-    printf("data[%d] total %d cities\n", i, data[i].size());
-  }
-
   // HopfieldNetwork net(numCities, 0, new CPUDenseRecall(), new CPUHebbianTraining());
   // for (unsigned i = 0; i < NUM_TESTS; i++) {
   //   net.train(data[i]);
