@@ -47,7 +47,7 @@ Training *getTraining(const std::string &name);
 // Representation of a Hopfield network that is trained from data vectors
 class TrainedHopfieldNetwork : public HopfieldNetwork {
 public:
-  TrainedHopfieldNetwork(const std::vector<float> thresholds,
+  TrainedHopfieldNetwork(const std::vector<float> &thresholds,
                          Recall *recallImpl = new CPUDenseRecall(),
                          Training *trainingImpl = new CPUHebbianTraining()) :
     HopfieldNetwork(thresholds, std::vector<std::vector<float>>(thresholds.size(), std::vector<float>(thresholds.size(), 0)), recallImpl),
