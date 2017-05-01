@@ -52,8 +52,8 @@ public:
 
 protected:
   // Device memory
-  float *thresholds; // size
-  float *weights;    // size * size
+  float *thresholdsDev; // size
+  float *weightsDev;    // size * size
 };
 
 class CPUSparseHopfieldNetwork : public HopfieldNetwork {
