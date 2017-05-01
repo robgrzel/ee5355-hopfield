@@ -9,7 +9,7 @@ using namespace std;
 
 #define DEFAULT_SIZE 10000
 #define DEFAULT_NUM_VECTORS 100
-#define DEFAULT_KEY_SIZE_PROP 0.1
+#define DEFAULT_KEY_SIZE_PROP 0.25
 
 int main(int argc, const char *argv[]) {
   if (argc < 2 || argc > 5) {
