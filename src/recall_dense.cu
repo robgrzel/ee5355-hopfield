@@ -38,8 +38,6 @@ __global__ void gpu_dense_recall_kernel(size_t size,
 vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
                                     const vector<float> &thresholds,
                                     const vector<vector<float> > &weights) {
-
-  vector<bool> state = data;
   size_t size = data.size();
   bool stable;
 
@@ -96,6 +94,8 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
                     cudaMemcpyDeviceToHost) == cudaSuccess);
 
   assert(cudaDeviceSynchronize() == cudaSuccess);
+  
+  vector<bool> state(size);
   for (size_t i = 0; i < size; ++i) {
     state[i] = dataArray[i];
   }
