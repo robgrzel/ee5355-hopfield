@@ -4,10 +4,15 @@
 
 #include "Point.h"
 #include <vector>
+#include <cstdio>
+#include <iostream>
 using namespace std;
 class TSP_graph {
 private:
   vector<Point> cities;
+  vector<vector<float> > w;
+  float gamma;
+  float threshold;
 
 public:
   // add a city at point p
@@ -50,5 +55,51 @@ public:
     return tour;
   }
 
+  vector<vector<float> > calculate_weights() {
+    vector<vector<float> > w(pow(size(),2), vector<float>(pow(size(),2), 0));
+      
+    // calculate the weight matrix
+    for (int k = 0; k < size(); ++k)
+    {
+      for (int i = 0; i < size(); ++i)
+      {
+        for (int k_plus_1 = 0; k_plus_1 < size(); ++k_plus_1)
+        {
+          for (int j = 0; j < size(); ++j)
+          {
+            float t = ((i == j) || (k == k_plus_1))?0:-gamma;
+
+            w[(k * size()) + i][(k_plus_1 * size()) + j] = -dist_between(i, j) + t;
+          }
+        }
+      }
+    }
+    return w;
+  }
+
+  void print_weights() {
+    // print the weight matrix
+    cout<<"The weight matrix:"<<endl<<endl;
+    for (int i = 0; i < size(); ++i)
+    {
+      for (int k = 0; k < size(); ++k)
+      {
+        printf("Node (city=%d, time=%d)\n", i, k);
+        for (int j = 0; j < size(); ++j)
+        {
+          for (int k_plus_1 = 0; k_plus_1 < size(); ++k_plus_1)
+          {
+            printf("%2f\t", w[(k * size()) + i][(k_plus_1 * size()) + j]);
+          }
+          cout<<endl;
+        }
+        cout<<endl<<endl;
+      }
+    }
+  }
+
+  vector<vector<float> > get_weights() {
+    return w;
+  }
 }; // class TSP_graph
 #endif

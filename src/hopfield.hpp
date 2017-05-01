@@ -66,8 +66,8 @@ public:
 // Representation of a Hopfield network
 class HopfieldNetwork {
 public:
-  HopfieldNetwork(const std::vector<float> thresholds,
-                  const std::vector<std::vector<float>> weights,
+  HopfieldNetwork(const std::vector<float> &thresholds,
+                  const std::vector<std::vector<float> > &weights,
                   Recall *recallImpl = new CPUDenseRecall()) :
     size(thresholds.size()),
     thresholds(thresholds),

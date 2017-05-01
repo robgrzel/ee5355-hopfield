@@ -13,7 +13,6 @@ using namespace std;
 
 int main() {
   srand(time(NULL)); // use current time to seed random number generator
-
   // Initialize TSP
   TSP_graph tsp;
   int numCities = 0;
@@ -37,46 +36,10 @@ int main() {
     (City)
 
   */
-  double E_tsp = 0.0;
+  float E_tsp = 0.0;
 
-  vector<vector<double>> w;
-  w.resize(pow(tsp.size(),2), vector<double>(pow(tsp.size(),2), 0));
-  // calculate the weight matrix
-  for (int k = 0; k < tsp.size(); ++k)
-  {
-    for (int i = 0; i < tsp.size(); ++i)
-    {
-      for (int k_plus_1 = 0; k_plus_1 < tsp.size(); ++k_plus_1)
-      {
-        for (int j = 0; j < tsp.size(); ++j)
-        {
-          double t = ((i == j) || (k == k_plus_1))?0:-GAMMA;
-
-          w[(k * tsp.size()) + i][(k_plus_1 * tsp.size()) + j] = -tsp.dist_between(i, j) + t;
-        }
-      }
-    }
-  }
-
-  // print the weight matrix
-  cout<<"The weight matrix:"<<endl<<endl;
-  for (int i = 0; i < tsp.size(); ++i)
-  {
-    for (int k = 0; k < tsp.size(); ++k)
-    {
-      printf("Node (city=%d, time=%d)\n", i, k);
-      for (int j = 0; j < tsp.size(); ++j)
-      {
-        for (int k_plus_1 = 0; k_plus_1 < tsp.size(); ++k_plus_1)
-        {
-          printf("%2f\t", w[(k * tsp.size()) + i][(k_plus_1 * tsp.size()) + j]);
-        }
-        cout<<endl;
-      }
-      cout<<endl<<endl;
-    }
-  }
-  // HopfieldNetwork net(numCities, 0, new CPUDenseRecall(), new CPUHebbianTraining());
+  vector<float> thresholds(tsp.size(), THRESHOLD);
+  HopfieldNetwork net(thresholds, tsp.get_weights());
   // for (unsigned i = 0; i < NUM_TESTS; i++) {
   //   net.train(data[i]);
   // }
