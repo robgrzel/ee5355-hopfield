@@ -10,14 +10,14 @@
  *
  */
 unsigned MinCutGraph::pickStation() {
-    return rowOffsets.size()-2;
+   return weights.size()-1;
 }
 
 /*
  * The thresholds would simply be the edge weights
  * from the station to all other nodes
  *
- * TODO: Is a deepcopy required?????????????????????????????????????
+ * TODO: Is a deepcopy required?
  */
 std::vector<float> MinCutGraph::generateThresholds(unsigned station) {
     return weights[station];
@@ -35,13 +35,15 @@ std::vector<float> MinCutGraph::generateThresholds(unsigned station) {
  */
 std::vector<std::vector<float> > MinCutGraph::generateWeights(unsigned station) {
     /*
-     * Must deepcopy!
-     *
+     * Must deepcopy
+     * Assignment does deepcopy by itself
      */
     std::vector<std::vector<float> > hopfieldW = weights;
     hopfieldW.erase(hopfieldW.begin() + station);
 
-    for (unsigned i = 0; i < )
+    for (unsigned i = 0; i < hopfieldW.size(); i++)
+        hopfieldW[i].erase(hopfieldW[i].begin() + station);
+
     return hopfieldW;
 }
 
@@ -59,17 +61,16 @@ unsigned MinCutGraph::mapToGraphIndex(unsigned station, unsigned hopfieldIndex) 
  * Make sure that minCutIndex != station!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
  */
-unsigned MinCutGraph::mapToHopfieldIndex(unsigned station, unsigned minCutIndex) {
-    return (minCutIndex < station) ? minCutIndex : minCutIndex-1;
+unsigned MinCutGraph::mapToHopfieldIndex(unsigned station, unsigned graphIndex) {
+    return (graphIndex < station) ? minCutIndex : graphIndex-1;
 }
 
 /*
  * the hopfield network omits station
- * so rowOffsets.size()-1 is the size
  *
  */
 std::vector<bool> MinCutGraph::generateInitialStates() {
-    unsigned size = rowOffsets.size()-2;
+    unsigned size = weights.size()-1;
     std::vector<bool> states(size);
     for (unsigned i = 0; i < size; i++) {
         states.push_back(false);

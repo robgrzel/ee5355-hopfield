@@ -29,8 +29,6 @@ class MinCutGraph {
          * 
          *
          */
-        std::vector<unsigned> rowOffsets;
-        std::vector<std::vector<int> > columnIndices;
         std::vector<std::vector<float> > weights;
 
         /*
@@ -67,9 +65,8 @@ class MinCutGraph {
 
 
     public:
-        MinCutGraph(std::vector<unsigned> rowOffsets, 
-                std::vector<std::vector<float> > weights) : 
-            rowOffsets(rowOffsets), weights(weights) {}
+        MinCutGraph(std::vector<std::vector<float> > weights) : 
+            weights(weights) {}
 
         /*
          * Returns graph index given hopfield index
