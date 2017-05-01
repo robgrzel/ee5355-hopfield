@@ -4,18 +4,7 @@
 #include <string>
 using namespace std;
 
-Training *getTraining(const std::string &name) {
-  if (name == "hebbian")
-    return new CPUHebbianTraining;
-  else if (name == "storkey")
-    return new CPUStorkeyTraining;
-  else {
-    cerr << "Unknown training algorithm " << name << endl;
-    exit(1);
-  }
-}
-
-Recall *getRecall(const std::string &name) {
+Recall *getRecall(const string &name) {
   if (name == "cpu_dense")
     return new CPUDenseRecall;
   else if (name == "cpu_sparse")

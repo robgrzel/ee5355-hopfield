@@ -1,4 +1,3 @@
-
 #include "hopfield.hpp"
 
 #include <cstdint>
