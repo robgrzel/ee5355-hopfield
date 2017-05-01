@@ -25,7 +25,8 @@
 class MinCutGraph {
     private:
         /*
-         * vertices are labelled from 0 to n-1
+         * vertices are labelled from 0 to rowOffsets.size()-2
+         * 
          *
          */
         std::vector<unsigned> rowOffsets;
