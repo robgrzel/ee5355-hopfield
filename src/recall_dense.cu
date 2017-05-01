@@ -57,7 +57,6 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
 
   if (size % numThreads) numBlocks++;
 
-
   for (size_t i = 0; i < size; ++i) {
     dataArray[i] = data[i];
     thresholdArray[i] = thresholds[i];
@@ -94,7 +93,7 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
     assert(cudaDeviceSynchronize() == cudaSuccess);
 
     assert(cudaMemcpy(&stable, stableDev, sizeof(bool),
-                      cudaMemcpyHostToDevice) == cudaSuccess);
+                      cudaMemcpyDeviceToHost) == cudaSuccess);
   } while (!stable);
 
   assert(cudaMemcpy(dataArray, stateDev, size * sizeof(bool),
@@ -112,3 +111,4 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
 
   return state;
 }
+
