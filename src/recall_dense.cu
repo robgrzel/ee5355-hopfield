@@ -39,6 +39,7 @@ __global__ void gpu_dense_recall_kernel(size_t size,
 vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
                                     const vector<float> &thresholds,
                                     const vector<vector<float> > &weights) {
+
   vector<bool> state;
   size_t size = data.size();
   bool stable;
@@ -47,14 +48,15 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
   float thresholdArray[size];
   float weightArray[size][size];
 
-  bool * stableDev;
   bool * stateDev;
   float * thresholdDev;
   float * weightDev;
+  bool * stableDev;
   unsigned numThreads = 256;
   unsigned numBlocks = size / numThreads;
 
   if (size % numThreads) numBlocks++;
+
 
   for (size_t i = 0; i < size; ++i) {
     dataArray[i] = data[i];
@@ -66,10 +68,11 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
   }
 
   assert(cudaMalloc((void**) &stateDev, sizeof(bool) * size) == cudaSuccess);
-  assert(cudaMalloc((void**) &thresholdDev, sizeof(bool) * size)
+  assert(cudaMalloc((void**) &thresholdDev, sizeof(float) * size)
          == cudaSuccess);
-  assert(cudaMalloc((void**) &weightDev, sizeof(bool) * size * size)
+  assert(cudaMalloc((void**) &weightDev, sizeof(float) * size * size)
          == cudaSuccess);
+  assert(cudaMalloc((void**) &stableDev, sizeof(bool)) == cudaSuccess);
 
   assert(cudaMemcpy(stateDev, dataArray, size * sizeof(bool),
                     cudaMemcpyHostToDevice) == cudaSuccess);
@@ -97,6 +100,7 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
   assert(cudaMemcpy(dataArray, stateDev, size * sizeof(bool),
                     cudaMemcpyDeviceToHost) == cudaSuccess);
 
+  assert(cudaDeviceSynchronize() == cudaSuccess);
   for (size_t i = 0; i < size; ++i) {
     state[i] = dataArray[i];
   }
@@ -104,6 +108,7 @@ vector<bool> GPUDenseRecall::recall(const vector<bool> &data,
   cudaFree(stateDev);
   cudaFree(thresholdDev);
   cudaFree(weightDev);
+  cudaFree(stableDev);
 
   return state;
 }
