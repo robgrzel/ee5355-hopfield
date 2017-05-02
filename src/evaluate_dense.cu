@@ -45,9 +45,7 @@ GPUDenseHopfieldNetwork::GPUDenseHopfieldNetwork(const std::vector<float> &thres
 
   float (*weightArray)[size] = (float(*)[size])new float[size * size];
   for (size_t i = 0; i < size; ++i) {
-    for (size_t j = 0; j < size; ++j) {
-      weightArray[i][j] = weights[i][j];
-    }
+    copy(weights[i].begin(), weights[i].end(), weightArray[i]);
   }
 
   cudaCheck(cudaMemcpy(thresholdsDev, thresholds.data(), size * sizeof(float),
