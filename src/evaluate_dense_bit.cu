@@ -12,7 +12,8 @@ using namespace std;
 #define BLOCK_SIZE 256
 
 __global__ void gpu_dense_bit_recall_kernel(size_t size,
-                                            bool *state, //WORD *state,
+                                            size_t numWords,
+                                            WORD *states,
                                             float *thresholds,
                                             float *weights,
                                             bool *stable) {
@@ -20,18 +21,28 @@ __global__ void gpu_dense_bit_recall_kernel(size_t size,
 
   if (i < size) {
     float value = 0.0f;
-    for (size_t k = 0; k < size; ++k) {
-      if (state[k])
-        value += weights[i * size + k];
-      else
-        value -= weights[i * size + k];
+    for (unsigned j = 0; j < numWords; j++) {
+      WORD s = states[j];
+      for (size_t k = 0; k < WORD_SIZE; ++k) {
+        size_t idx = j * WORD_SIZE + k;
+        if (idx < size) {
+          if (s & (1 << k))
+            value += weights[i * size + idx];
+          else
+            value -= weights[i * size + idx];
+        }
+      }
     }
 
-    bool update = value > thresholds[i];
-    if (update != state[i]) {
+    bool newState = value > thresholds[i];
+    bool oldState = states[i / WORD_SIZE] & (1 << (i % WORD_SIZE)) != 0;
+    if (newState != oldState) {
       *stable = false;
-      state[i] = update;
     }
+    // Set each bit of according to newState in each thread of the warp
+    WORD newStates = __ballot(newState);
+    if (threadIdx.x % WORD_SIZE == 0)
+      states[i / WORD_SIZE] = newStates;
   }
 }
 
@@ -60,10 +71,13 @@ GPUDenseBitHopfieldNetwork::~GPUDenseBitHopfieldNetwork() {
 }
 
 vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
+  size_t numWords = size / WORD_SIZE;
+  if (numWords % WORD_SIZE) numWords++;
+  
   bool stable;
-  bool dataArray[size];
+  WORD dataArray[numWords];
 
-  bool *stateDev;
+  WORD *stateDev;
   bool *stableDev;
   
   unsigned numThreads = 256;
@@ -71,11 +85,20 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
 
   if (size % numThreads) numBlocks++;
 
-  cudaCheck(cudaMalloc((void**) &stateDev, sizeof(bool) * size));
+  cudaCheck(cudaMalloc((void**) &stateDev, sizeof(WORD) * numWords));
   cudaCheck(cudaMalloc((void**) &stableDev, sizeof(bool)));
 
-  copy(data.begin(), data.end(), dataArray);
-  cudaCheck(cudaMemcpy(stateDev, dataArray, size * sizeof(bool),
+  for (size_t i = 0; i < numWords; i++) {
+    WORD s = 0;
+    for (size_t j = 0; j < WORD_SIZE; j++) {
+      size_t idx = i * WORD_SIZE + j;
+      if (idx < size) {
+        s |= data[idx] & (1 << j);
+      }
+    }
+    dataArray[i] = s;
+  }
+  cudaCheck(cudaMemcpy(stateDev, dataArray, numWords * sizeof(WORD),
                        cudaMemcpyHostToDevice));
 
   do {
@@ -84,7 +107,7 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
                          cudaMemcpyHostToDevice));
 
     gpu_dense_bit_recall_kernel<<< numBlocks, numThreads >>>
-      (size, stateDev, thresholdsDev, weightsDev, stableDev);
+      (size, numWords, stateDev, thresholdsDev, weightsDev, stableDev);
     cudaCheck(cudaDeviceSynchronize());
 
     cudaCheck(cudaMemcpy(&stable, stableDev, sizeof(bool),
