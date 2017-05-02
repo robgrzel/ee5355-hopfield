@@ -16,8 +16,6 @@ __global__ void gpu_dense_recall_kernel(size_t size,
   float value = 0.0f;
   bool update;
 
-  bool stableT = true;
-
   if (i < size) {
     for (size_t k = 0; k < size; ++k) {
       if (state[k])
@@ -28,12 +26,9 @@ __global__ void gpu_dense_recall_kernel(size_t size,
 
     update = value > thresholds[i];
     if (update != state[i]) {
-      stableT = false;
+      *stable = false;
       state[i] = update;
     }
-
-    //TODO: use reduction to find stable
-    atomicAnd((int *) stable, (int) stableT);
   }
 }
 
