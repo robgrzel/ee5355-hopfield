@@ -55,7 +55,6 @@ class MinCutGraph {
         std::vector<std::vector<float> > generateWeights(unsigned station);
 
         /*
-         * TODO: can this be made static????????????????????????????????????????????
          *
          * I think there is no initialization that guarantees 
          * quick / better convergence, if that were the case,
@@ -63,11 +62,6 @@ class MinCutGraph {
          *
          */
         std::vector<bool> generateInitialStates();
-
-
-    public:
-        MinCutGraph(std::vector<std::vector<float> > &weights) : 
-            weights(weights) {}
 
         /*
          * Returns graph index given hopfield index
@@ -80,10 +74,16 @@ class MinCutGraph {
          */
         static unsigned mapToHopfieldIndex(unsigned station, unsigned minCutIndex);
 
+
+
+    public:
+        MinCutGraph(std::vector<std::vector<float> > &weights) : 
+            weights(weights) {}
+
         /*
          *
          */
-        HopfieldNetwork generateHopfieldNetwork();
+        std::vector<std::vector<unsigned> > partitionGraph(Evaluation *const evaluationImpl);
 };
 
 #endif

@@ -81,6 +81,26 @@ std::vector<bool> MinCutGraph::generateInitialStates() {
  * 
  * 
  */
-HopfieldNetwork MinCutGraph::generateHopfieldNetwork() {
-	HopfieldNetwork network();
+std::vector<std::vector<unsigned> > MinCutGraph::partitionGraph(Evaluation *const evaluationImpl) {
+    unsigned station = pickStation();
+    std::vector<std::vector<float> > weights = generateWeights(station);
+    std::vector<float> thresholds = generateThresholds(station);
+
+    
+	HopfieldNetwork* network = evaluationImpl->makeHopfieldNetwork(thresholds, weights);
+    std::vector<bool> states = network->evaluate(generateInitialStates());
+    
+    std::vector<std::vector<unsigned> > partitions;
+    partitions.push_back(std::vector<unsigned>());
+    partitions.push_back(std::vector<unsigned>());
+
+    for (unsigned i = 0; i < states.size(); i++) {
+        unsigned id = mapToGraphIndex(station, i);
+        if (states[i]) partitions[1].push_back(id);
+        else partitions[0].push_back(id);
+    }
+
+    partitions[1].push_back(station);
+    
+    return partitions;
 }
