@@ -71,24 +71,8 @@ public:
       delete network;
   }
 
-  void store(const std::vector<bool> &data) {
-    assert(data.size() == size);
-    
-    if (network != NULL)
-      delete network;
-    network = NULL;
-    
-    trainingImpl->train(data, weights, numDataSets++);
-  }
-
-  std::vector<bool> recall(const std::vector<bool> &data) {
-    assert(data.size() == size);
-    
-    if (network == NULL)
-      network = evaluationImpl->makeHopfieldNetwork(thresholds, weights);
-    
-    return network->evaluate(data);
-  }
+  void store(const std::vector<bool> &data);
+  std::vector<bool> recall(const std::vector<bool> &data);
 
   const size_t size;
   

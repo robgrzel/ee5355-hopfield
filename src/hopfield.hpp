@@ -93,7 +93,6 @@ public:
   std::vector<bool> evaluate(const std::vector<bool> &data);
 
 protected:
-  // TODO: Fill in representation of a sparse Hopfield network for the host
   std::vector<float> thresholds;
   std::vector<float> sW_nnz;
   std::vector<int> sW_colInd;
