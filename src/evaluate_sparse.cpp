@@ -12,31 +12,24 @@ CPUSparseHopfieldNetwork::CPUSparseHopfieldNetwork(const std::vector<float> &thr
                                                    const std::vector<std::vector<float>> &weights) :
     HopfieldNetwork(thresholds, weights), 
     thresholds(thresholds) {
-  // TODO
   // Converting dense weight matrix to sparse matrix
   size_t size = thresholds.size(); //size threshold = size data
   int w_size = (int)size;
   int w_col = w_size;
   int w_row = w_size;
-  //float *sW_nnz;
-  //int *sW_colInd;
-  //int *sW_rowPtr;
 
-  sW_nnz = (float*)malloc(sizeof(float)*w_row*w_col);
-  sW_colInd = (int*)malloc(sizeof(int)*w_row*w_col);
-  sW_rowPtr = (int*)malloc(sizeof(int)*(w_row+1));
 
   int nnz=0;
   int rowPtr = 0;
   for(int i=0; i < w_row; ++i)
   {
-	sW_rowPtr[i]=rowPtr;
+	sW_rowPtr.push_back(rowPtr);
 	for(int j=0; j < w_col; ++j)
 	{
 		if(weights[i][j]*weights[i][j]>WEIGHT_THRESHOLD*WEIGHT_THRESHOLD)
 		{
-			sW_nnz[nnz]=weights[i][j];
-			sW_colInd[nnz] = j;
+			sW_nnz.push_back(weights[i][j]);
+			sW_colInd.push_back(j);
 			++nnz;	
 		}
 	}
@@ -44,11 +37,11 @@ CPUSparseHopfieldNetwork::CPUSparseHopfieldNetwork(const std::vector<float> &thr
 
   }
   
-  sW_rowPtr[w_row]=rowPtr; // Last pointer equal number of NNZ elements
+  sW_rowPtr.push_back(rowPtr); // Last pointer equal number of NNZ elements
  
 
   //Sparse matrix Debuging code
-  printf("Percentage of NNZ elements in weight matrix using threshold %f = %f\n", WEIGHT_THRESHOLD,(100.00*nnz/(w_size*w_size)));
+  printf("Percentage of NNZ elements in weight matrix using threshold %f = %f%%\n", WEIGHT_THRESHOLD,(100.00*nnz/(w_size*w_size)));
 /*
    for (int f=0; f<nnz;++f)
       printf("%f  ",sW_nnz[f]);
@@ -64,14 +57,13 @@ CPUSparseHopfieldNetwork::CPUSparseHopfieldNetwork(const std::vector<float> &thr
 }
 
 CPUSparseHopfieldNetwork::~CPUSparseHopfieldNetwork() {
-  // TODO
+
 }
 
 vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
   vector<bool> state = data;
   size_t size = data.size();
   bool stable;
-
 
   do {
     stable = true;
