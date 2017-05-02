@@ -13,10 +13,9 @@ __global__ void gpu_dense_recall_kernel(size_t size,
                                         float * weights,
                                         bool * stable) {
   size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-  float value = 0.0f;
-  bool update;
 
   if (i < size) {
+    float value = 0.0f;
     for (size_t k = 0; k < size; ++k) {
       if (state[k])
         value += weights[i * size + k];
@@ -24,7 +23,7 @@ __global__ void gpu_dense_recall_kernel(size_t size,
         value -= weights[i * size + k];
     }
 
-    update = value > thresholds[i];
+    bool update = value > thresholds[i];
     if (update != state[i]) {
       *stable = false;
       state[i] = update;
