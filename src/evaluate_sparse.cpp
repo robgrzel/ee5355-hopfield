@@ -5,12 +5,11 @@
 #include <vector>
 #include <iostream>
 using namespace std;
-#define WEIGHT_THRESHOLD 0.1
-
 
 CPUSparseHopfieldNetwork::CPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
-                                                   const std::vector<std::vector<float>> &weights) :
-    HopfieldNetwork(thresholds, weights), 
+                                                   const std::vector<std::vector<float>> &weights,
+                                                   float weightThreshold) :
+  SparseHopfieldNetwork(thresholds, weights, weightThreshold), 
     thresholds(thresholds) {
   // Converting dense weight matrix to sparse matrix
   size_t size = thresholds.size(); //size threshold = size data
@@ -26,7 +25,7 @@ CPUSparseHopfieldNetwork::CPUSparseHopfieldNetwork(const std::vector<float> &thr
 	sW_rowPtr.push_back(rowPtr);
 	for(int j=0; j < w_col; ++j)
 	{
-		if(weights[i][j]*weights[i][j]>WEIGHT_THRESHOLD*WEIGHT_THRESHOLD)
+		if(weights[i][j]*weights[i][j]>weightThreshold*weightThreshold)
 		{
 			sW_nnz.push_back(weights[i][j]);
 			sW_colInd.push_back(j);
@@ -41,7 +40,8 @@ CPUSparseHopfieldNetwork::CPUSparseHopfieldNetwork(const std::vector<float> &thr
  
 
   //Sparse matrix Debuging code
-  printf("Percentage of NNZ elements in weight matrix using threshold %f = %f%%\n", WEIGHT_THRESHOLD,(100.00*nnz/(w_size*w_size)));
+
+  printf("Percentage of NNZ elements in weight matrix using threshold %f = %f%%\n", weightThreshold,(100.00*nnz/(w_size*w_size)));
 /*
    for (int f=0; f<nnz;++f)
       printf("%f  ",sW_nnz[f]);
@@ -54,10 +54,6 @@ CPUSparseHopfieldNetwork::CPUSparseHopfieldNetwork(const std::vector<float> &thr
    printf("\n");
 */
   
-}
-
-CPUSparseHopfieldNetwork::~CPUSparseHopfieldNetwork() {
-
 }
 
 vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {

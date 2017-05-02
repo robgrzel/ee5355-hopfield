@@ -12,8 +12,9 @@ __global__ void gpu_sparse_recall_kernel() {
 }
 
 GPUSparseHopfieldNetwork::GPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
-                                                   const std::vector<std::vector<float>> &weights) :
-    HopfieldNetwork(thresholds, weights) {
+                                                   const std::vector<std::vector<float>> &weights,
+                                                   float weightThreshold) :
+  SparseHopfieldNetwork(thresholds, weights, weightThreshold) {
   // TODO
   //Variables
   bool stable;
