@@ -39,7 +39,7 @@ DRIVEROBJS  := $(patsubst %, $(OBJDIR)/%.cpp.o, $(EXECUTABLES))
 BINS        := $(addprefix $(ROOTBINDIR)/, $(EXECUTABLES))
 
 NVCC        := nvcc
-NVCCFLAGS   += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_61,code=sm_61 -Wno-deprecated-gpu-targets -m64 -DUNIX -std=c++11 --compiler-options -fno-strict-aliasing
+NVCCFLAGS   += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_61,code=sm_61 -Wno-deprecated-gpu-targets -m64 -DUNIX -std=c++11 --compiler-options -fno-strict-aliasing --compiler-options -fopenmp
 
 CXX         := g++
 CXXFLAGS    += -fopenmp -fno-strict-aliasing -m64 -std=gnu++11 -Wall -Wextra -DVERBOSE -DUNIX

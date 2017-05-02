@@ -26,7 +26,7 @@ __global__ void gpu_dense_bit_recall_kernel(size_t size,
       for (size_t k = 0; k < WORD_SIZE; ++k) {
         size_t idx = j * WORD_SIZE + k;
         if (idx < size) {
-          if (s & (1 << k))
+          if (s >> k & 1)
             value += weights[i * size + idx];
           else
             value -= weights[i * size + idx];
@@ -35,14 +35,13 @@ __global__ void gpu_dense_bit_recall_kernel(size_t size,
     }
 
     bool newState = value > thresholds[i];
-    bool oldState = (states[i / WORD_SIZE] & (1 << (i % WORD_SIZE))) != 0;
+    bool oldState = (states[i / WORD_SIZE] >> (i % WORD_SIZE)) & 1;
     if (newState != oldState) {
       *stable = false;
     }
     // Set each bit of according to newState in each thread of the warp
     WORD newStates = __ballot(newState);
-    if (threadIdx.x % WORD_SIZE == 0)
-      states[i / WORD_SIZE] = newStates;
+    states[i / WORD_SIZE] = newStates;
   }
 }
 
@@ -125,7 +124,7 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
     for (size_t j = 0; j < WORD_SIZE; j++) {
       size_t idx = i * WORD_SIZE + j;
       if (idx < size) {
-        state[idx] = (dataArray[i] & (1 << j)) != 0;
+        state[idx] = (dataArray[i] >> j) & 1;
       }
     }
   }
