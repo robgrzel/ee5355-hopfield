@@ -67,8 +67,11 @@ public:
 
 protected:
   // TODO: Fill in representation of a sparse Hopfield network for the host
-  //std::vector<float> thresholds;
-  //std::vector<std::vector<float> > weights;
+  std::vector<float> thresholds;
+  std::vector<std::vector<float> > weights;
+  float *sW_nnz;
+  int *sW_colInd;
+  int *sW_rowPtr;
 };
 
 class GPUSparseHopfieldNetwork : public HopfieldNetwork {

@@ -5,33 +5,26 @@
 #include <vector>
 #include <iostream>
 using namespace std;
-#define WEIGHT_THRESHOLD 0.05
+#define WEIGHT_THRESHOLD 0.1
 
 
 CPUSparseHopfieldNetwork::CPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
                                                    const std::vector<std::vector<float>> &weights) :
-    HopfieldNetwork(thresholds, weights) {
+    HopfieldNetwork(thresholds, weights), 
+    thresholds(thresholds) {
   // TODO
-}
-
-CPUSparseHopfieldNetwork::~CPUSparseHopfieldNetwork() {
-  // TODO
-}
-
-vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
-  /*  // Converting dense weight matrix to sparse matrix
-  vector<bool> state = data;
-  size_t size = data.size();
+  // Converting dense weight matrix to sparse matrix
+  size_t size = thresholds.size(); //size threshold = size data
   int w_size = (int)size;
   int w_col = w_size;
   int w_row = w_size;
-  float *sW_nnz;
-  int *sW_colInd;
-  int *sW_rowPtr;
+  //float *sW_nnz;
+  //int *sW_colInd;
+  //int *sW_rowPtr;
 
   sW_nnz = (float*)malloc(sizeof(float)*w_row*w_col);
   sW_colInd = (int*)malloc(sizeof(int)*w_row*w_col);
-  sW_rowPtr = (int*)malloc(sizeof(int)*w_row+1);
+  sW_rowPtr = (int*)malloc(sizeof(int)*(w_row+1));
 
   int nnz=0;
   int rowPtr = 0;
@@ -54,8 +47,8 @@ vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
   sW_rowPtr[w_row]=rowPtr; // Last pointer equal number of NNZ elements
  
 
- 	//Sparse matrix Debuging code
-        printf("Percentage of NNZ elements in weight matrix using threshold %f = %f\n", WEIGHT_THRESHOLD,(100.00*nnz/(w_size*w_size)));*/
+  //Sparse matrix Debuging code
+  printf("Percentage of NNZ elements in weight matrix using threshold %f = %f\n", WEIGHT_THRESHOLD,(100.00*nnz/(w_size*w_size)));
 /*
    for (int f=0; f<nnz;++f)
       printf("%f  ",sW_nnz[f]);
@@ -66,11 +59,20 @@ vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
    for (int f=0; f<w_row+1;++f)
       printf("%d  ",sW_rowPtr[f]);
    printf("\n");
-
-
 */
-/*
+  
+}
+
+CPUSparseHopfieldNetwork::~CPUSparseHopfieldNetwork() {
+  // TODO
+}
+
+vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
+  vector<bool> state = data;
+  size_t size = data.size();
   bool stable;
+
+
   do {
     stable = true;
 #pragma omp parallel for
@@ -92,6 +94,7 @@ vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
       state[i] = update;
     }
   } while (!stable);
-  return state;*/
+
+  return state;
 }
 
