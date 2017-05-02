@@ -7,7 +7,7 @@
 EXECUTABLES := simple_test test_driver
 
 # CUDA source files (compiled with cudacc)
-CUFILES	    := evaluate_dense.cu evaluate_sparse.cu
+CUFILES	    := evaluate_dense.cu evaluate_dense_bit.cu evaluate_sparse.cu
 # C/C++ source files (compiled with gcc / c++)
 CCFILES	    := hopfield.cpp evaluate_dense.cpp evaluate_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp
 # Header files included by any of CUFILES

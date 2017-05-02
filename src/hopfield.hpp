@@ -60,7 +60,20 @@ public:
                           const std::vector<std::vector<float>> &weights);
   ~GPUDenseHopfieldNetwork();
   
-  std::string getName() const { return "GPU dense"; }
+  std::vector<bool> evaluate(const std::vector<bool> &data);
+
+protected:
+  // Device memory
+  float *thresholdsDev; // size
+  float *weightsDev;    // size * size
+};
+
+class GPUDenseBitHopfieldNetwork : public HopfieldNetwork {
+public:
+  GPUDenseBitHopfieldNetwork(const std::vector<float> &thresholds,
+                             const std::vector<std::vector<float>> &weights);
+  ~GPUDenseBitHopfieldNetwork();
+  
   std::vector<bool> evaluate(const std::vector<bool> &data);
 
 protected:
@@ -89,11 +102,9 @@ public:
                            float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
   ~CPUSparseHopfieldNetwork() {}
   
-  std::string getName() const { return "CPU sparse"; }
   std::vector<bool> evaluate(const std::vector<bool> &data);
 
 protected:
-  // TODO: Fill in representation of a sparse Hopfield network for the host
   std::vector<float> thresholds;
   std::vector<float> sW_nnz;
   std::vector<int> sW_colInd;
@@ -107,7 +118,6 @@ public:
                            float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
   ~GPUSparseHopfieldNetwork();
   
-  std::string getName() const { return "GPU sparse"; }
   std::vector<bool> evaluate(const std::vector<bool> &data);
   
 protected:
@@ -144,7 +154,17 @@ class GPUDenseEvaluation : public Evaluation {
                                        const std::vector<std::vector<float>> &weights) {
     return new GPUDenseHopfieldNetwork(thresholds, weights);
   }
-  std::string getName() const { return "CPU dense"; }
+  std::string getName() const { return "GPU dense"; }
+};
+
+class GPUDenseBitEvaluation : public Evaluation {
+  ~GPUDenseBitEvaluation() {}
+  
+  HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                       const std::vector<std::vector<float>> &weights) {
+    return new GPUDenseBitHopfieldNetwork(thresholds, weights);
+  }
+  std::string getName() const { return "GPU dense bit"; }
 };
 
 class SparseEvaluation : public Evaluation {

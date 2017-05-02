@@ -7,11 +7,15 @@
 #include <iostream>
 using namespace std;
 
-__global__ void gpu_dense_recall_kernel(size_t size,
-                                        bool * state,
-                                        float * thresholds,
-                                        float * weights,
-                                        bool * stable) {
+#define WORD uint32_t
+#define WORD_SIZE 32
+#define BLOCK_SIZE 256
+
+__global__ void gpu_dense_bit_recall_kernel(size_t size,
+                                            bool *state, //WORD *state,
+                                            float *thresholds,
+                                            float *weights,
+                                            bool *stable) {
   size_t i = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (i < size) {
@@ -31,8 +35,8 @@ __global__ void gpu_dense_recall_kernel(size_t size,
   }
 }
 
-GPUDenseHopfieldNetwork::GPUDenseHopfieldNetwork(const std::vector<float> &thresholds,
-                                                 const std::vector<std::vector<float>> &weights) :
+GPUDenseBitHopfieldNetwork::GPUDenseBitHopfieldNetwork(const std::vector<float> &thresholds,
+                                                       const std::vector<std::vector<float>> &weights) :
   HopfieldNetwork(thresholds, weights) {
   cudaCheck(cudaMalloc((void**) &thresholdsDev, sizeof(float) * size));
   cudaCheck(cudaMalloc((void**) &weightsDev, sizeof(float) * size * size));
@@ -47,20 +51,21 @@ GPUDenseHopfieldNetwork::GPUDenseHopfieldNetwork(const std::vector<float> &thres
   cudaCheck(cudaMemcpy(weightsDev, weightArray, size * size * sizeof(float),
                        cudaMemcpyHostToDevice));
   
-  delete[] weightArray; 
+                       delete[] weightArray;
 }
 
-GPUDenseHopfieldNetwork::~GPUDenseHopfieldNetwork() {
+GPUDenseBitHopfieldNetwork::~GPUDenseBitHopfieldNetwork() {
   cudaFree(thresholdsDev);
   cudaFree(weightsDev);
 }
 
-vector<bool> GPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
+vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
   bool stable;
   bool dataArray[size];
 
   bool *stateDev;
   bool *stableDev;
+  
   unsigned numThreads = 256;
   unsigned numBlocks = size / numThreads;
 
@@ -78,7 +83,7 @@ vector<bool> GPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
     cudaCheck(cudaMemcpy(stableDev, &stable, sizeof(bool),
                          cudaMemcpyHostToDevice));
 
-    gpu_dense_recall_kernel<<< numBlocks, numThreads >>>
+    gpu_dense_bit_recall_kernel<<< numBlocks, numThreads >>>
       (size, stateDev, thresholdsDev, weightsDev, stableDev);
     cudaCheck(cudaDeviceSynchronize());
 
