@@ -6,7 +6,7 @@
 #include <cassert>
 #include <iostream>
 
-#define DEFAULT_WEIGHT_THRESHOLD 0.1
+#define DEFAULT_WEIGHT_THRESHOLD 0.2
 
 // Some macros...
 #define cudaCheck(stmt)                                                 \
@@ -124,6 +124,16 @@ protected:
   // TODO: Fill in representation of a sparse Hopfield network for the device
   //float *thresholds; // size
   //float *weights;    // size * size
+  bool *stable_d;
+  bool *state_d;
+  float *threshold_d;  // size
+  float *sW_nnz_d;     // Number of Non zero elements
+  int *sW_colInd_d;    // Number of Non zero elements
+  int *sW_rowPtr_d;    // size+1
+  std::vector<float> sW_nnz;
+  std::vector<int> sW_colInd;
+  std::vector<int> sW_rowPtr;
+
 };
 
 // Factory class for Hopfield networks
