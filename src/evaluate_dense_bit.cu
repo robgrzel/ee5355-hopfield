@@ -35,7 +35,7 @@ __global__ void gpu_dense_bit_recall_kernel(size_t size,
     }
 
     bool newState = value > thresholds[i];
-    bool oldState = states[i / WORD_SIZE] & (1 << (i % WORD_SIZE)) != 0;
+    bool oldState = (states[i / WORD_SIZE] & (1 << (i % WORD_SIZE))) != 0;
     if (newState != oldState) {
       *stable = false;
     }
@@ -72,7 +72,7 @@ GPUDenseBitHopfieldNetwork::~GPUDenseBitHopfieldNetwork() {
 
 vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
   size_t numWords = size / WORD_SIZE;
-  if (numWords % WORD_SIZE) numWords++;
+  if (size % WORD_SIZE) numWords++;
   
   bool stable;
   WORD dataArray[numWords];
@@ -93,11 +93,12 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
     for (size_t j = 0; j < WORD_SIZE; j++) {
       size_t idx = i * WORD_SIZE + j;
       if (idx < size) {
-        s |= data[idx] & (1 << j);
+        s |= (data[idx] << j);
       }
     }
     dataArray[i] = s;
   }
+  
   cudaCheck(cudaMemcpy(stateDev, dataArray, numWords * sizeof(WORD),
                        cudaMemcpyHostToDevice));
 
@@ -114,12 +115,20 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
                          cudaMemcpyDeviceToHost));
   } while (!stable);
 
-  cudaCheck(cudaMemcpy(dataArray, stateDev, size * sizeof(bool),
+  cudaCheck(cudaMemcpy(dataArray, stateDev, numWords * sizeof(WORD),
                        cudaMemcpyDeviceToHost));
 
   cudaCheck(cudaDeviceSynchronize());
   
-  vector<bool> state(dataArray, dataArray + size);
+  vector<bool> state(size, 0);
+  for (size_t i = 0; i < numWords; i++) {
+    for (size_t j = 0; j < WORD_SIZE; j++) {
+      size_t idx = i * WORD_SIZE + j;
+      if (idx < size) {
+        state[idx] = (dataArray[i] & (1 << j)) != 0;
+      }
+    }
+  }
 
   cudaFree(stateDev);
   cudaFree(stableDev);
