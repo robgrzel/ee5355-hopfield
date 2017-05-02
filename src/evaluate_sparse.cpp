@@ -56,10 +56,6 @@ CPUSparseHopfieldNetwork::CPUSparseHopfieldNetwork(const std::vector<float> &thr
   
 }
 
-CPUSparseHopfieldNetwork::~CPUSparseHopfieldNetwork() {
-
-}
-
 vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
   vector<bool> state = data;
   size_t size = data.size();

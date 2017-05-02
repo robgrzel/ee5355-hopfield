@@ -87,7 +87,7 @@ public:
   CPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
                            const std::vector<std::vector<float>> &weights,
                            float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
-  ~CPUSparseHopfieldNetwork();
+  ~CPUSparseHopfieldNetwork() {}
   
   std::string getName() const { return "CPU sparse"; }
   std::vector<bool> evaluate(const std::vector<bool> &data);
