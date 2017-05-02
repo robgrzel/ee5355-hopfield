@@ -1,6 +1,7 @@
 #include <vector>
 #include "mincut.hpp"
-
+#include "hopfield.hpp"
+#include <assert.h>
 /*
  * Just returns the last node of the graph
  *
@@ -47,7 +48,6 @@ std::vector<std::vector<float> > MinCutGraph::generateWeights(unsigned station) 
     return hopfieldW;
 }
 
-
 /*
  *
  *
@@ -58,11 +58,11 @@ unsigned MinCutGraph::mapToGraphIndex(unsigned station, unsigned hopfieldIndex) 
 }
 
 /*
- * Make sure that minCutIndex != station!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * Make sure that minCutIndex != station
  *
  */
 unsigned MinCutGraph::mapToHopfieldIndex(unsigned station, unsigned graphIndex) {
-    return (graphIndex < station) ? minCutIndex : graphIndex-1;
+    return (graphIndex < station) ? graphIndex : graphIndex-1;
 }
 
 /*
@@ -75,4 +75,12 @@ std::vector<bool> MinCutGraph::generateInitialStates() {
     for (unsigned i = 0; i < size; i++) {
         states.push_back(false);
     }
+}
+
+/*
+ * 
+ * 
+ */
+HopfieldNetwork MinCutGraph::generateHopfieldNetwork() {
+	HopfieldNetwork network();
 }

@@ -2,6 +2,7 @@
 #define MIN_CUT_GRAPH
 
 #include <vector>
+#include "hopfield.hpp"
 
 /***************************************************
  * defines a class to marshall graph specifications
@@ -25,7 +26,7 @@
 class MinCutGraph {
     private:
         /*
-         * vertices are labelled from 0 to rowOffsets.size()-2
+         * vertices are labelled from 0 to weights.size()-1
          * 
          *
          */
@@ -56,7 +57,7 @@ class MinCutGraph {
         /*
          * TODO: can this be made static????????????????????????????????????????????
          *
-         * I think there is no initialization that is guarantees 
+         * I think there is no initialization that guarantees 
          * quick / better convergence, if that were the case,
          * wouldn't need to solve in the first place
          *
@@ -65,7 +66,7 @@ class MinCutGraph {
 
 
     public:
-        MinCutGraph(std::vector<std::vector<float> > weights) : 
+        MinCutGraph(std::vector<std::vector<float> > &weights) : 
             weights(weights) {}
 
         /*
@@ -78,6 +79,11 @@ class MinCutGraph {
          *
          */
         static unsigned mapToHopfieldIndex(unsigned station, unsigned minCutIndex);
+
+        /*
+         *
+         */
+        HopfieldNetwork generateHopfieldNetwork();
 };
 
 #endif
