@@ -7,11 +7,11 @@
 EXECUTABLES := simple_test test_driver tsp
 
 # CUDA source files (compiled with cudacc)
-CUFILES	    := recall_dense.cu recall_sparse.cu
+CUFILES	    := evaluate_dense.cu evaluate_sparse.cu
 # C/C++ source files (compiled with gcc / c++)
-CCFILES	    := hopfield.cpp recall_dense.cpp recall_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp
+CCFILES	    := hopfield.cpp evaluate_dense.cpp evaluate_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp
 # Header files included by any of CUFILES
-CUHEADERS   := hopfield.hpp assoc_memory.hpp TSP_graph.hpp
+CUHEADERS   := hopfield.hpp TSP_graph.hpp
 # Header files included by any of CCFILES
 CCHEADERS   := hopfield.hpp assoc_memory.hpp TSP_graph.hpp
 
@@ -44,7 +44,7 @@ NVCCFLAGS   += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code
 CXX         := g++
 CXXFLAGS    += -fopenmp -fno-strict-aliasing -m64 -std=gnu++11 -Wall -Wextra -DVERBOSE -DUNIX
 
-LIB         += -lgomp -lcudart
+LIB         += -lgomp -lcudart -lcusparse
 
 ifeq ($(dbg),1)
   CXXFLAGS  += -g3 -ggdb
