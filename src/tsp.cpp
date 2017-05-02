@@ -24,10 +24,10 @@ int main() {
     printf("tsp: city %d added at (%d, %d)\n", i, x, y);
   }
   printf("tsp total %d cities\n", tsp.size());
-
+  vector<bool> data(pow(tsp.size(),2), false);
   /* Network is represented as a tour matrix. Each node is an entry in the matrix
 
-          | 1 2 ... n (Time)
+       x  | 1 2 ... n (Time)
     ------+-----------------
      S1   |
      S2   |
@@ -35,6 +35,7 @@ int main() {
      Sn   |
     (City)
 
+  x is stored row-major ie, x = {(S1, 1), (S1, 2)...}
   */
   float E_tsp = 0.0;
 
@@ -46,9 +47,19 @@ int main() {
 
   // cout << "Recall: " << endl;
   // Calculate L - The length of the trip
-
+  float L = 0.0;
+  for (int i = 0; i < tsp.size(); ++i)
+  {
+    for (int j = 0; j < tsp.size(); ++j)
+    {
+      for (int k = 0; k < tsp.size(); ++k)
+      {
+        L += tsp.dist_between(i,j) * x[tsp.size()*i+k] * x[tsp.size()*j+(k+1)]
+      }
+    }
+  }
   // Calculate the constraint "one time in each city"
-
+  float Condition = 
   // for (unsigned i = 0; i < NUM_TESTS; i++) {
   //   vector<bool> key = data[i];
   //   for (unsigned j = 0; j < numCities; j++) {
