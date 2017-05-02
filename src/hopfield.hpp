@@ -93,6 +93,9 @@ public:
   
 protected:
   const float weightThreshold;
+  std::vector<float> sW_nnz;
+  std::vector<int> sW_colInd;
+  std::vector<int> sW_rowPtr;
 };
 
 class CPUSparseHopfieldNetwork : public SparseHopfieldNetwork {
@@ -106,9 +109,6 @@ public:
 
 protected:
   std::vector<float> thresholds;
-  std::vector<float> sW_nnz;
-  std::vector<int> sW_colInd;
-  std::vector<int> sW_rowPtr;
 };
 
 class GPUSparseHopfieldNetwork : public SparseHopfieldNetwork {
@@ -130,9 +130,6 @@ protected:
   float *sW_nnz_d;     // Number of Non zero elements
   int *sW_colInd_d;    // Number of Non zero elements
   int *sW_rowPtr_d;    // size+1
-  std::vector<float> sW_nnz;
-  std::vector<int> sW_colInd;
-  std::vector<int> sW_rowPtr;
 
 };
 
