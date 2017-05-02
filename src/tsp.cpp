@@ -37,29 +37,23 @@ int main() {
 
   x is stored row-major ie, x = {(S1, 1), (S1, 2)...}
   */
-  float E_tsp = 0.0;
 
   vector<float> thresholds(tsp.size(), THRESHOLD);
-  HopfieldNetwork net(thresholds, tsp.get_weights());
-  // for (unsigned i = 0; i < NUM_TESTS; i++) {
-  //   net.train(data[i]);
-  // }
+  CPUDenseHopfieldNetwork network(thresholds, tsp.get_weights());
+  network.evaluate(data);
 
-  // cout << "Recall: " << endl;
-  // Calculate L - The length of the trip
-  float L = 0.0;
   for (int i = 0; i < tsp.size(); ++i)
   {
-    for (int j = 0; j < tsp.size(); ++j)
+    for (int k = 0; k < tsp.size(); ++k)
     {
-      for (int k = 0; k < tsp.size(); ++k)
-      {
-        L += tsp.dist_between(i,j) * x[tsp.size()*i+k] * x[tsp.size()*j+(k+1)]
-      }
+      printf("%d ", data[(i*tsp.size())+k]);
     }
   }
-  // Calculate the constraint "one time in each city"
-  float Condition = 
+
+  // float E_tsp = 0.0;
+  // float L = 0.0;
+  // // Calculate the constraint "one time in each city"
+  // float Condition = 
   // for (unsigned i = 0; i < NUM_TESTS; i++) {
   //   vector<bool> key = data[i];
   //   for (unsigned j = 0; j < numCities; j++) {
