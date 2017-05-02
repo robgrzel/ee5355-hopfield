@@ -6,6 +6,17 @@
 #include <cassert>
 #include <iostream>
 
+// Some macros...
+#define cudaCheck(stmt)                                                 \
+  do {                                                                  \
+    cudaError_t err = stmt;                                             \
+    if (err != cudaSuccess) {                                           \
+      std::cout << "Failed to run stmt " #stmt << std::endl;            \
+      std::cout << "Got CUDA error ...  " << cudaGetErrorString(err) << std::endl; \
+    exit(1);                                                            \
+    }                                                                   \
+  } while (0)
+
 #define _unused(x) ((void)(x))
 
 // Representation of a Hopfield network

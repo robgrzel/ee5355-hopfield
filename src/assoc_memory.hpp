@@ -50,8 +50,9 @@ public:
   AssociativeMemory(const std::vector<float> &thresholds,
                     Training *trainingImpl = new CPUHebbianTraining,
                     Evaluation *evaluationImpl = new CPUDenseEvaluation) :
+    size(thresholds.size()),
     thresholds(thresholds),
-    weights(thresholds.size(), std::vector<float>(thresholds.size())),
+    weights(size, std::vector<float>(size, 0)),
     trainingImpl(trainingImpl),
     evaluationImpl(evaluationImpl),
     network(NULL),
@@ -88,13 +89,15 @@ public:
     
     return network->evaluate(data);
   }
+
+  const size_t size;
   
 private:
   std::vector<float> thresholds;
   std::vector<std::vector<float> > weights;
     
-  Training *trainingImpl;
-  Evaluation *evaluationImpl;
+  Training *const trainingImpl;
+  Evaluation *const evaluationImpl;
   HopfieldNetwork *network;
 
   size_t numDataSets;
