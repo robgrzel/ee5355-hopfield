@@ -4,16 +4,16 @@
 #
 ################################################################################
 
-EXECUTABLES := test
+EXECUTABLES := simple_test test_driver
 
 # CUDA source files (compiled with cudacc)
-CUFILES	    := recall_dense.cu recall_sparse.cu
+CUFILES	    := evaluate_dense.cu evaluate_sparse.cu
 # C/C++ source files (compiled with gcc / c++)
-CCFILES	    := training_hebbian.cpp training_storkey.cpp recall_dense.cpp recall_sparse.cpp
+CCFILES	    := hopfield.cpp evaluate_dense.cpp evaluate_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp
 # Header files included by any of CUFILES
 CUHEADERS   := hopfield.hpp
 # Header files included by any of CCFILES
-CCHEADERS   := hopfield.hpp
+CCHEADERS   := hopfield.hpp assoc_memory.hpp
 
 SRCDIR      := src
 ROOTDIR     := .
@@ -34,6 +34,7 @@ C_DEPS      := $(addprefix $(SRCDIR)/, $(CCHEADERS)) Makefile
 
 CUOBJS      := $(patsubst %.cu, $(OBJDIR)/%.cu.o, $(CUFILES))
 CCOBJS      := $(patsubst %.cpp, $(OBJDIR)/%.cpp.o, $(CCFILES))
+DRIVEROBJS  := $(patsubst %, $(OBJDIR)/%.cpp.o, $(EXECUTABLES))
 
 BINS        := $(addprefix $(ROOTBINDIR)/, $(EXECUTABLES))
 
@@ -43,7 +44,7 @@ NVCCFLAGS   += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code
 CXX         := g++
 CXXFLAGS    += -fopenmp -fno-strict-aliasing -m64 -std=gnu++11 -Wall -Wextra -DVERBOSE -DUNIX
 
-LIB         += -lgomp -lcudart
+LIB         += -lgomp -lcudart -lcusparse
 
 ifeq ($(dbg),1)
   CXXFLAGS  += -g3 -ggdb
@@ -61,7 +62,7 @@ endif
 
 .PHONY : all clean clobber
 
-all : $(BINS)
+all : $(BINS) $(CUOBJS) $(CCOBJS) $(DRIVEROBJS) $(OBJDIR)/device.o
 
 $(OBJDIR)/%.cu.o : $(SRCDIR)/%.cu $(CU_DEPS) | $(OBJDIR)
 	$(V)$(NVCC) $(NVCCFLAGS) -dc -o $@ $<
