@@ -80,6 +80,10 @@ class MinCutGraph {
         MinCutGraph(std::vector<std::vector<float> > &weights) : 
             weights(weights) {}
 
+        MinCutGraph(unsigned numVertices);
+
+        std::vector<std::vector<float> > getWeights();
+
         /*
          *
          */

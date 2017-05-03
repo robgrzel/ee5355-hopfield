@@ -4,16 +4,16 @@
 #
 ################################################################################
 
-EXECUTABLES := simple_test test_driver
+EXECUTABLES := simple_test test_driver mincut_driver
 
 # CUDA source files (compiled with cudacc)
 CUFILES	    := evaluate_dense.cu evaluate_sparse.cu
 # C/C++ source files (compiled with gcc / c++)
-CCFILES	    := hopfield.cpp evaluate_dense.cpp evaluate_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp
-# Header files included by any of CUFILES
+CCFILES	    := hopfield.cpp evaluate_dense.cpp evaluate_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp mincut.cpp
+# Header files included by any of CUFILES 
 CUHEADERS   := hopfield.hpp
 # Header files included by any of CCFILES
-CCHEADERS   := hopfield.hpp assoc_memory.hpp
+CCHEADERS   := hopfield.hpp assoc_memory.hpp mincut.hpp utils.hpp
 
 SRCDIR      := src
 ROOTDIR     := .
