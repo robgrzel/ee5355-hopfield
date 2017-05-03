@@ -26,8 +26,8 @@ __global__ void gpu_dense_recall_kernel(size_t size,
     bool update = value > thresholds[i];
     if (update != state[i]) {
       *stable = false;
-      state[i] = update;
     }
+    state[i] = update;
   }
 }
 

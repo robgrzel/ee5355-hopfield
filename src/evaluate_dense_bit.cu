@@ -9,7 +9,6 @@ using namespace std;
 
 #define WORD uint32_t
 #define WORD_SIZE 32
-#define BLOCK_SIZE 256
 
 __global__ void gpu_dense_bit_recall_kernel(size_t size,
                                             size_t numWords,

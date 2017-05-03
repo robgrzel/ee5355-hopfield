@@ -68,6 +68,20 @@ protected:
   float *weightsDev;    // size * size
 };
 
+class GPUDenseCoarseHopfieldNetwork : public HopfieldNetwork {
+public:
+  GPUDenseCoarseHopfieldNetwork(const std::vector<float> &thresholds,
+				const std::vector<std::vector<float>> &weights);
+  ~GPUDenseCoarseHopfieldNetwork();
+  
+  std::vector<bool> evaluate(const std::vector<bool> &data);
+
+protected:
+  // Device memory
+  float *thresholdsDev; // size
+  float *weightsDev;    // size * size
+};
+
 class GPUDenseBitHopfieldNetwork : public HopfieldNetwork {
 public:
   GPUDenseBitHopfieldNetwork(const std::vector<float> &thresholds,
@@ -165,6 +179,16 @@ class GPUDenseEvaluation : public Evaluation {
     return new GPUDenseHopfieldNetwork(thresholds, weights);
   }
   std::string getName() const { return "GPU dense"; }
+};
+
+class GPUDenseCoarseEvaluation : public Evaluation {
+  ~GPUDenseCoarseEvaluation() {}
+  
+  HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                       const std::vector<std::vector<float>> &weights) {
+    return new GPUDenseCoarseHopfieldNetwork(thresholds, weights);
+  }
+  std::string getName() const { return "GPU dense coarse"; }
 };
 
 class GPUDenseBitEvaluation : public Evaluation {
