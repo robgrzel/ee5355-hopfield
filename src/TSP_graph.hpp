@@ -7,17 +7,21 @@
 #include <cstdio>
 #include <iostream>
 
+#define K_DELTA(i,j) (i==j)
 using namespace std;
 class TSP_graph {
 private:
   vector<Point> cities;
   vector<vector<float> > w;
-  float gamma;
+  float a;
+  float b;
+  float c;
+  float d;
   float threshold;
 
 public:
 
-  TSP_graph(float g) : gamma(g), threshold(-g / 2.0) {}
+  TSP_graph(float a_in, float b_in, float c_in, float d_in) : a(a_in),b(b_in),c(c_in),d(d_in) {}
 
   float get_threshold() const {
     return threshold;
@@ -26,6 +30,7 @@ public:
   // add a city at point p
   void add(const Point& p) {
     cities.push_back(p);
+    threshold = c * cities.size();
   }
 
   // add a city at (x, y)
@@ -72,9 +77,9 @@ public:
         for (int j = 0; j < size(); ++j) {
           for (int k2 = 0; k2 < size(); ++k2) {
             // printf("weight calculated for (i=%d, k1=%d) to (j=%d, k1+1=%d\n", i,k1,j,k2);
-            float t = ((i == j) || (k1 == k2))?-gamma:0;
+            // float t = ((i == j) || (k1 == k2))?-gamma:0;
 
-            w[(i * size()) + k1][(j * size()) + k2] = -dist_between(i, j) + t;
+            w[(i * size()) + k1][(j * size()) + k2] = -a*K_DELTA(i,j)*(1 - K_DELTA(k1,k2)) - b*K_DELTA(k1,k2)*(1 - K_DELTA(i,j)) - c - d*K_DELTA(i,j)*(K_DELTA(i,k1+1) + K_DELTA(i,k1-1));
           }
         }
       }

@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <cassert>
+#include <cmath>
+#include <unistd.h>
 #include <vector>
 #include <iostream>
 using namespace std;
@@ -10,6 +12,7 @@ vector<bool> CPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
   assert(data.size() == size);
   vector<bool> state = data;
   bool stable;
+  int iters = 0;
   do {
     stable = true;
 #pragma omp parallel for
@@ -30,6 +33,20 @@ vector<bool> CPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
       stable &= update == state[i];
       state[i] = update;
     }
-  } while (!stable);
+    iters++;
+    if((iters % 1000)==0) {
+    printf("================================================\niteration %d\n", iters);
+      for (int i = 0; i < sqrt(size); ++i)
+      {
+        for (int k = 0; k < sqrt(size); ++k)
+        {
+          printf("%s ", state[(i*sqrt(size))+k] ? "ja    " : "nein  ");
+        }
+        printf("\n");
+      }
+      printf("\n");
+    }
+    // usleep(1e4);
+  } while ((!stable) && (iters < 10000000000000000));
   return state;
 }
