@@ -17,7 +17,6 @@ private:
 
 public:
 
-  TSP_graph() : gamma(1e2), threshold(-gamma / 2.0) {}
   TSP_graph(float g) : gamma(g), threshold(-g / 2.0) {}
 
   float get_threshold() const {
@@ -68,14 +67,14 @@ public:
     w = vector<vector<float> > (size() * size(), vector<float>(size() * size(), 0));
     printf("weights size = %lu\n", w.size());
     // calculate the weight matrix
-    for (int k = 0; k < size(); ++k) {
-      for (int i = 0; i < size(); ++i) {
-        for (int k_plus_1 = 0; k_plus_1 < size(); ++k_plus_1) {
-          for (int j = 0; j < size(); ++j) {
-            // printf("weight calculated for (i=%d, k=%d) to (j=%d, k+1=%d\n", i,k,j,k_plus_1);
-            float t = ((i == j) || (k == k_plus_1)) ? -gamma : 0;
+    for (int i = 0; i < size(); ++i) {
+      for (int k1 = 0; k1 < size(); ++k1) {
+        for (int j = 0; j < size(); ++j) {
+          for (int k2 = 0; k2 < size(); ++k2) {
+            // printf("weight calculated for (i=%d, k1=%d) to (j=%d, k1+1=%d\n", i,k1,j,k2);
+            float t = ((i == j) || (k1 == k2))?-gamma:0;
 
-            w[(k * size()) + i][(k_plus_1 * size()) + j] = -dist_between(i, j) + t;
+            w[(i * size()) + k1][(j * size()) + k2] = -dist_between(i, j) + t;
           }
         }
       }
@@ -87,11 +86,11 @@ public:
     // print the weight matrix
     cout<<"The weight matrix:"<<endl<<endl;
     for (int i = 0; i < size(); ++i) {
-      for (int k = 0; k < size(); ++k) {
-        printf("Node (city=%d, time=%d)\n", i, k);
+      for (int k1 = 0; k1 < size(); ++k1) {
+        printf("Node (city=%d, time=%d)\n", i, k1);
         for (int j = 0; j < size(); ++j) {
-          for (int k_plus_1 = 0; k_plus_1 < size(); ++k_plus_1) {
-            printf("%2f\t", w[(k * size()) + i][(k_plus_1 * size()) + j]);
+          for (int k2 = 0; k2 < size(); ++k2) {
+            printf("%2f\t", w[(i * size()) + k1][(j * size()) + k2]);
           }
           cout<<endl;
         }
@@ -102,7 +101,7 @@ public:
 
   vector<vector<float> > get_weights() {
     // printf("Returning the following weights matrix\n");
-    print_weights();
+    // print_weights();
     return w;
   }
 }; // class TSP_graph
