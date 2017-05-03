@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
     Evaluation *evaluation = getEvaluation(std::string(argv[2]));
 
     MinCutGraph graph(numVertices);
-    printVector<float>(graph.getWeights());
+    //printVector<float>(graph.getWeights());
     std::vector<std::vector<unsigned> > partitions = graph.partitionGraph(evaluation);
 
     std::cout << "\nPartitions, one partition per line: \n";

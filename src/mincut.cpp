@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <iostream>
 #include "utils.hpp"
+#include "chrono"
 /*
  * Just returns the last node of the graph
  *
@@ -90,17 +91,23 @@ std::vector<std::vector<unsigned> > MinCutGraph::partitionGraph(Evaluation *cons
     std::vector<std::vector<float> > hopfieldW = generateWeights(station);
     std::vector<float> thresholds = generateThresholds(station);
 
-    std::cout << "\nhopfield weights:\n";
+    /*std::cout << "\nhopfield weights:\n";
     printVector(hopfieldW);
     std::cout << "\nhopfield thresholds:\n";
-    printVector(thresholds);
+    printVector(thresholds);*/
     
 	HopfieldNetwork* network = evaluationImpl->makeHopfieldNetwork(thresholds, hopfieldW);
-    std::vector<bool> initialStates = generateInitialStates();
-    std::cout << "\ninitial states:\n";
-    printVector(initialStates);
 
+    std::vector<bool> initialStates = generateInitialStates();
+    /*std::cout << "\ninitial states:\n";
+    printVector(initialStates);*/
+
+    auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<bool> states = network->evaluate(initialStates);    
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = t2 - t1;
+    std::cout << diff.count() << " sec" << std::endl;
+
     std::vector<std::vector<unsigned> > partitions;
     partitions.push_back(std::vector<unsigned>());
     partitions.push_back(std::vector<unsigned>());
@@ -123,8 +130,8 @@ MinCutGraph::MinCutGraph(unsigned numVertices) {
     for (unsigned i = 0; i < numVertices; i++) {
         for (unsigned j = i+1; j < numVertices; j++) {
             float val = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            if (rand() % 2 > 0) 
-                val = -val;
+            //if (rand() % 2 > 0) 
+                //val = -val;
             weights[i][j] = val;
             weights[j][i] = val;
         }
