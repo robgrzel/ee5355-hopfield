@@ -44,7 +44,7 @@ int main() {
   {
     for (int k = 0; k < tsp.size(); ++k)
     {
-      printf("%d ", data[(i*tsp.size())+k] ? 1 : 0);
+      printf("%s ", data[(i*tsp.size())+k] ? "ja    " : "nein  ");
     }
     printf("\n");
   }
