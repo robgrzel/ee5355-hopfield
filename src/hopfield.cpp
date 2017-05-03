@@ -15,6 +15,8 @@ Evaluation *getEvaluation(const string &name) {
     return new GPUDenseBitEvaluation;
   else if (name == "gpu_sparse")
     return new GPUSparseEvaluation;
+  else if (name == "gpu_sparse_queue")
+    return new GPUSparseQueueEvaluation;
   else {
     cerr << "Unknown evaluation algorithm " << name << endl;
     exit(1);
