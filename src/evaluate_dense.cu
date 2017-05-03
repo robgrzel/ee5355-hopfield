@@ -86,6 +86,8 @@ vector<bool> GPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
   cudaCheck(cudaMemcpy(stateDev, dataArray, size * sizeof(bool),
                        cudaMemcpyHostToDevice));
 
+  cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+
   do {
     stable = true;
     cudaCheck(cudaMemcpy(stableDev, &stable, sizeof(bool),
