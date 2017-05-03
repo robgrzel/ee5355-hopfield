@@ -13,6 +13,10 @@ Evaluation *getEvaluation(const string &name) {
     return new GPUDenseEvaluation;
   else if (name == "gpu_dense_bit")
     return new GPUDenseBitEvaluation;
+  else if (name == "gpu_dense_block")
+    return new GPUDenseBlockEvaluation;
+  else if (name == "gpu_dense_coarse")
+    return new GPUDenseCoarseEvaluation;
   else if (name == "gpu_sparse")
     return new GPUSparseEvaluation;
   else if (name == "gpu_sparse_queue")

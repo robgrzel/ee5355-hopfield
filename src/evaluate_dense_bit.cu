@@ -9,7 +9,7 @@ using namespace std;
 
 #define WORD uint32_t
 #define WORD_SIZE 32
-#define BLOCK_SIZE 256
+#define BLOCK_SIZE 32
 
 __global__ void gpu_dense_bit_recall_kernel(size_t size,
                                             size_t numWords,
@@ -26,7 +26,7 @@ __global__ void gpu_dense_bit_recall_kernel(size_t size,
       for (size_t k = 0; k < WORD_SIZE; ++k) {
         size_t idx = j * WORD_SIZE + k;
         if (idx < size) {
-          if (s & (1 << k))
+          if (s >> k & 1)
             value += weights[i * size + idx];
           else
             value -= weights[i * size + idx];
@@ -35,14 +35,13 @@ __global__ void gpu_dense_bit_recall_kernel(size_t size,
     }
 
     bool newState = value > thresholds[i];
-    bool oldState = states[i / WORD_SIZE] & (1 << (i % WORD_SIZE)) != 0;
+    bool oldState = (states[i / WORD_SIZE] >> (i % WORD_SIZE)) & 1;
     if (newState != oldState) {
       *stable = false;
     }
     // Set each bit of according to newState in each thread of the warp
     WORD newStates = __ballot(newState);
-    if (threadIdx.x % WORD_SIZE == 0)
-      states[i / WORD_SIZE] = newStates;
+    states[i / WORD_SIZE] = newStates;
   }
 }
 
@@ -72,7 +71,7 @@ GPUDenseBitHopfieldNetwork::~GPUDenseBitHopfieldNetwork() {
 
 vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
   size_t numWords = size / WORD_SIZE;
-  if (numWords % WORD_SIZE) numWords++;
+  if (size % WORD_SIZE) numWords++;
   
   bool stable;
   WORD dataArray[numWords];
@@ -80,10 +79,9 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
   WORD *stateDev;
   bool *stableDev;
   
-  unsigned numThreads = 256;
-  unsigned numBlocks = size / numThreads;
+  unsigned numBlocks = size / BLOCK_SIZE;
 
-  if (size % numThreads) numBlocks++;
+  if (size % BLOCK_SIZE) numBlocks++;
 
   cudaCheck(cudaMalloc((void**) &stateDev, sizeof(WORD) * numWords));
   cudaCheck(cudaMalloc((void**) &stableDev, sizeof(bool)));
@@ -93,11 +91,12 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
     for (size_t j = 0; j < WORD_SIZE; j++) {
       size_t idx = i * WORD_SIZE + j;
       if (idx < size) {
-        s |= data[idx] & (1 << j);
+        s |= (data[idx] << j);
       }
     }
     dataArray[i] = s;
   }
+  
   cudaCheck(cudaMemcpy(stateDev, dataArray, numWords * sizeof(WORD),
                        cudaMemcpyHostToDevice));
 
@@ -106,7 +105,7 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
     cudaCheck(cudaMemcpy(stableDev, &stable, sizeof(bool),
                          cudaMemcpyHostToDevice));
 
-    gpu_dense_bit_recall_kernel<<< numBlocks, numThreads >>>
+    gpu_dense_bit_recall_kernel<<< numBlocks, BLOCK_SIZE >>>
       (size, numWords, stateDev, thresholdsDev, weightsDev, stableDev);
     cudaCheck(cudaDeviceSynchronize());
 
@@ -114,16 +113,23 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
                          cudaMemcpyDeviceToHost));
   } while (!stable);
 
-  cudaCheck(cudaMemcpy(dataArray, stateDev, size * sizeof(bool),
+  cudaCheck(cudaMemcpy(dataArray, stateDev, numWords * sizeof(WORD),
                        cudaMemcpyDeviceToHost));
 
   cudaCheck(cudaDeviceSynchronize());
   
-  vector<bool> state(dataArray, dataArray + size);
+  vector<bool> state(size, 0);
+  for (size_t i = 0; i < numWords; i++) {
+    for (size_t j = 0; j < WORD_SIZE; j++) {
+      size_t idx = i * WORD_SIZE + j;
+      if (idx < size) {
+        state[idx] = (dataArray[i] >> j) & 1;
+      }
+    }
+  }
 
   cudaFree(stateDev);
   cudaFree(stableDev);
 
   return state;
 }
-
