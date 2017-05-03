@@ -9,6 +9,7 @@ using namespace std;
 
 #define WORD uint32_t
 #define WORD_SIZE 32
+#define BLOCK_SIZE 32
 
 __global__ void gpu_dense_bit_recall_kernel(size_t size,
                                             size_t numWords,
@@ -78,10 +79,9 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
   WORD *stateDev;
   bool *stableDev;
   
-  unsigned numThreads = 256;
-  unsigned numBlocks = size / numThreads;
+  unsigned numBlocks = size / BLOCK_SIZE;
 
-  if (size % numThreads) numBlocks++;
+  if (size % BLOCK_SIZE) numBlocks++;
 
   cudaCheck(cudaMalloc((void**) &stateDev, sizeof(WORD) * numWords));
   cudaCheck(cudaMalloc((void**) &stableDev, sizeof(bool)));
@@ -105,7 +105,7 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
     cudaCheck(cudaMemcpy(stableDev, &stable, sizeof(bool),
                          cudaMemcpyHostToDevice));
 
-    gpu_dense_bit_recall_kernel<<< numBlocks, numThreads >>>
+    gpu_dense_bit_recall_kernel<<< numBlocks, BLOCK_SIZE >>>
       (size, numWords, stateDev, thresholdsDev, weightsDev, stableDev);
     cudaCheck(cudaDeviceSynchronize());
 
