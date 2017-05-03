@@ -4,23 +4,34 @@
 #include <vector>
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <cstdio>
 #include "TSP_graph.hpp"
 using namespace std;
 
-int main() {
+int main(int argc, char ** argv) {
   srand(time(NULL)); // use current time to seed random number generator
+  string cities = "cities";
+
+  if (argc == 2) {
+    cities = string(argv[1]);
+    printf("reading cities from file named %s\n", argv[1]);
+  } else {
+    printf("reading cities from file named 'cities'\n");
+  }
+
   // Initialize TSP
   TSP_graph tsp;
-  unsigned numCities = 0;
-  numCities = (rand() % 11) + 5;
-  for (unsigned i = 0; i < numCities; i++) {
-    int x = rand() % 100;
-    int y = rand() % 100;
-    tsp.add(x, y);
+  ifstream in;
+
+  in.open(cities);
+  int x, y, i = 0;
+  while (in >> x >> y) {
     printf("tsp: city %d added at (%d, %d)\n", i, x, y);
+    tsp.add(x, y);
   }
-  printf("tsp total %d cities\n", tsp.size());
+  in.close();
+
   vector<bool> data(tsp.size()*tsp.size(), false);
   /* Network is represented as a tour matrix. Each node is an entry in the matrix
 
