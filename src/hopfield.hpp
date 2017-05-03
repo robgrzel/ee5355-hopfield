@@ -27,7 +27,9 @@ public:
   HopfieldNetwork(const std::vector<float> &thresholds,
                   const std::vector<std::vector<float>> &weights) :
     size(thresholds.size()) {
-    assert(weights.size() == size);
+    if(weights.size() != size) {
+      printf("ASSERT FAIL\nweights.size=%lu\nthreshold.size=%lu\n", weights.size(), thresholds.size());
+    };
     _unused(weights); // Suppress warning in release build
   }
   

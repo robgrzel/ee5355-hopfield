@@ -24,7 +24,7 @@ int main() {
     printf("tsp: city %d added at (%d, %d)\n", i, x, y);
   }
   printf("tsp total %d cities\n", tsp.size());
-  vector<bool> data(pow(tsp.size(),2), false);
+  vector<bool> data(tsp.size()*tsp.size(), false);
   /* Network is represented as a tour matrix. Each node is an entry in the matrix
 
        x  | 1 2 ... n (Time)
@@ -38,9 +38,10 @@ int main() {
   x is stored row-major ie, x = {(S1, 1), (S1, 2)...}
   */
 
-  vector<float> thresholds(tsp.size(), THRESHOLD);
+  vector<float> thresholds(tsp.size()*tsp.size(), THRESHOLD);
+  tsp.calculate_weights();
   CPUDenseHopfieldNetwork network(thresholds, tsp.get_weights());
-  network.evaluate(data);
+  // network.evaluate(data);
 
   for (int i = 0; i < tsp.size(); ++i)
   {
