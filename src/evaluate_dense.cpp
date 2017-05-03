@@ -25,10 +25,12 @@ vector<bool> CPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
         else
           value -= weights[i][k];
       }
-      bool update = value > thresholds[i];
-#pragma omp atomic
-      stable &= update == state[i];
-      state[i] = update;
+      bool newStateVal = value > thresholds[i];
+      bool updated = newStateVal != state[i];
+      if (updated) {
+	stable = false;
+	state[i] = newStateVal;
+      }
     }
   } while (!stable);
   return state;
