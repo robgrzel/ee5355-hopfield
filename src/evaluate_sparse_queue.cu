@@ -22,31 +22,36 @@ __global__ void gpu_sparse_recall_kernel(size_t size,
                                         float * sW_nnz,
                                         int * sW_colInd,
                                         int * sW_rowPtr,
-                                        bool * stable) 
+                                        bool * stable,
+					int * nodePtr) 
 {
-  // TODO
-   size_t node = blockIdx.x * blockDim.x + threadIdx.x;
-   if (node < size) {
-    float value = 0.0f;
+  
+   int node;
+   do {
+     node = atomicAdd(nodePtr,1);
+     if(node < size) {
+       float value = 0.0f;
 
-    for (size_t k = sW_rowPtr[node]; k < sW_rowPtr[node+1]; ++k) 
-    {			
-	if (state[sW_colInd[k]])
-		value += sW_nnz[k];
-       	else
+       for (size_t k = sW_rowPtr[node]; k < sW_rowPtr[node+1]; ++k) 
+       {			
+            if (state[sW_colInd[k]])
+	        value += sW_nnz[k];
+            else
      		value -= sW_nnz[k];
-    }
+	}
 
-    bool update = value > thresholds[node];
-    if (update != state[node]) {
-      *stable = false;
-      state[node] = update;
-    }
-  }
+
+       bool update = value > thresholds[node];
+       if (update != state[node]) {
+         *stable = false;
+         state[node] = update;
+       }
+     }
+  } while(node<(int)size);
   
 }
 
-GPUSparseHopfieldNetwork::GPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
+GPUSparseQueueHopfieldNetwork::GPUSparseQueueHopfieldNetwork(const std::vector<float> &thresholds,
                                                    const std::vector<std::vector<float>> &weights,
                                                    float weightThreshold) :
   SparseHopfieldNetwork(thresholds, weights, weightThreshold) {
@@ -54,6 +59,8 @@ GPUSparseHopfieldNetwork::GPUSparseHopfieldNetwork(const std::vector<float> &thr
   //   Convering dense   //
   //   weight matrix to  //
   //    Sparse matrix    //
+  
+  gpuErrchk(cudaMalloc((void**)&nodePtr,sizeof(int)));
 
   int w_size = (int)size;
   int w_col = w_size;
@@ -98,7 +105,7 @@ GPUSparseHopfieldNetwork::GPUSparseHopfieldNetwork(const std::vector<float> &thr
 
 }
 
-GPUSparseHopfieldNetwork::~GPUSparseHopfieldNetwork() {
+GPUSparseQueueHopfieldNetwork::~GPUSparseQueueHopfieldNetwork() {
 
   //Free Device memory
   cudaFree(state_d);
@@ -106,14 +113,16 @@ GPUSparseHopfieldNetwork::~GPUSparseHopfieldNetwork() {
   cudaFree(sW_nnz_d);
   cudaFree(sW_colInd_d);
   cudaFree(sW_rowPtr_d);
-  cudaFree(stable_d);
+  cudaFree(stable_d); 
+  cudaFree(nodePtr);
 
 }
 
-vector<bool> GPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
+vector<bool> GPUSparseQueueHopfieldNetwork::evaluate(const vector<bool> &data) {
   // TODO: Implement me!
 
   bool stable_h;
+  int nodePtr_h;
   bool data_h[size];
 
   unsigned numThreads = 256;
@@ -127,9 +136,13 @@ vector<bool> GPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
     gpuErrchk(cudaMemcpy(stable_d, &stable_h, sizeof(bool),
                          cudaMemcpyHostToDevice));
 
-    gpu_sparse_recall_kernel<<< numBlocks, numThreads >>> 
-    (size, state_d, threshold_d, sW_nnz_d, sW_colInd_d, sW_rowPtr_d, stable_d);
 
+    nodePtr_h=0;
+    gpuErrchk(cudaMemcpy(nodePtr,&nodePtr_h, sizeof(int),cudaMemcpyHostToDevice));
+
+
+
+    gpu_sparse_recall_kernel<<< numBlocks, numThreads >>> (size, state_d, threshold_d, sW_nnz_d, sW_colInd_d, sW_rowPtr_d, stable_d,nodePtr);
 
     gpuErrchk(cudaDeviceSynchronize());
 

@@ -7,7 +7,7 @@
 EXECUTABLES := simple_test test_driver mincut_driver
 
 # CUDA source files (compiled with cudacc)
-CUFILES	    := evaluate_dense.cu evaluate_sparse.cu
+CUFILES	    := evaluate_dense.cu evaluate_dense_bit.cu evaluate_dense_block.cu evaluate_dense_coarse.cu evaluate_sparse.cu evaluate_sparse_GP.cu evaluate_sparse_queue.cu
 # C/C++ source files (compiled with gcc / c++)
 CCFILES	    := hopfield.cpp evaluate_dense.cpp evaluate_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp mincut.cpp
 # Header files included by any of CUFILES 
@@ -39,7 +39,7 @@ DRIVEROBJS  := $(patsubst %, $(OBJDIR)/%.cpp.o, $(EXECUTABLES))
 BINS        := $(addprefix $(ROOTBINDIR)/, $(EXECUTABLES))
 
 NVCC        := nvcc
-NVCCFLAGS   += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_61,code=sm_61 -Wno-deprecated-gpu-targets -m64 -DUNIX -std=c++11 --compiler-options -fno-strict-aliasing
+NVCCFLAGS   += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_61,code=sm_61 -Wno-deprecated-gpu-targets -m64 -DUNIX -std=c++11 --compiler-options -fno-strict-aliasing --compiler-options -fopenmp
 
 CXX         := g++
 CXXFLAGS    += -fopenmp -fno-strict-aliasing -m64 -std=gnu++11 -Wall -Wextra -DVERBOSE -DUNIX

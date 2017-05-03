@@ -5,6 +5,10 @@
 #include <cassert>
 #include <vector>
 #include <iostream>
+
+#include <cuda_runtime.h>
+#include <cusparse_v2.h>
+#include <time.h>
 using namespace std;
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -16,7 +20,12 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
       if (abort) exit(code);
    }
 }
-__global__ void gpu_sparse_recall_kernel(size_t size,
+
+
+
+
+
+__global__ void gpu_sparse_gpu_prePro_recall_kernel(size_t size,
                                         bool * state,
                                         float * thresholds,
                                         float * sW_nnz,
@@ -28,9 +37,8 @@ __global__ void gpu_sparse_recall_kernel(size_t size,
    size_t node = blockIdx.x * blockDim.x + threadIdx.x;
    if (node < size) {
     float value = 0.0f;
-
     for (size_t k = sW_rowPtr[node]; k < sW_rowPtr[node+1]; ++k) 
-    {			
+    {	
 	if (state[sW_colInd[k]])
 		value += sW_nnz[k];
        	else
@@ -46,7 +54,7 @@ __global__ void gpu_sparse_recall_kernel(size_t size,
   
 }
 
-GPUSparseHopfieldNetwork::GPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
+GPUSparseGpuPreProHopfieldNetwork::GPUSparseGpuPreProHopfieldNetwork(const std::vector<float> &thresholds,
                                                    const std::vector<std::vector<float>> &weights,
                                                    float weightThreshold) :
   SparseHopfieldNetwork(thresholds, weights, weightThreshold) {
@@ -54,51 +62,57 @@ GPUSparseHopfieldNetwork::GPUSparseHopfieldNetwork(const std::vector<float> &thr
   //   Convering dense   //
   //   weight matrix to  //
   //    Sparse matrix    //
-
+  cusparseHandle_t handle;
+  cusparseCreate(&handle);
   int w_size = (int)size;
-  int w_col = w_size;
-  int w_row = w_size;
-
-  int nnz=0;
-  int rowPtr = 0;
-  for(int i=0; i < w_row; ++i)
-  {
-	sW_rowPtr.push_back(rowPtr);
-	for(int j=0; j < w_col; ++j)
-	{
-		if(weights[i][j]*weights[i][j]>weightThreshold*weightThreshold)
-		{
-			sW_nnz.push_back(weights[i][j]);
-			sW_colInd.push_back(j);
-			++nnz;	
-		}
-	}
-	rowPtr=nnz;
+  float *h_w_dense = (float*)malloc(w_size*w_size*sizeof(*h_w_dense));
+#pragma omp parallel for
+  for (size_t i = 0; i < size; ++i) {
+    for (size_t j = 0; j < size; ++j) {
+      //Make loose connections -> No connection
+      h_w_dense[i+j*size] = weights[i][j]*weights[i][j]>weightThreshold*weightThreshold ? weights[i][j] : 0;
+    }
   }
+
   
-  sW_rowPtr.push_back(rowPtr); // Last pointer equal number of NNZ elements
+  gpuErrchk(cudaMalloc(&d_w_dense,w_size*w_size*sizeof(float)));
+  gpuErrchk(cudaMemcpy(d_w_dense,h_w_dense,w_size*w_size*sizeof(float),cudaMemcpyHostToDevice));
+
+  cusparseMatDescr_t descrW;
+  cusparseCreateMatDescr(&descrW);
+  cusparseSetMatType (descrW, CUSPARSE_MATRIX_TYPE_GENERAL);
+  cusparseSetMatIndexBase (descrW, CUSPARSE_INDEX_BASE_ZERO);
+  int nnz = 0;
+  const int lda = w_size;
+  
+  gpuErrchk(cudaMalloc(&d_nnzPerVector, w_size*sizeof(int)));
+
+  cusparseSnnz(handle,CUSPARSE_DIRECTION_ROW,w_size,w_size,descrW,d_w_dense,lda,d_nnzPerVector,&nnz);
+
+  int *h_nnzPerVector = (int *) malloc(w_size*sizeof(int));
+  gpuErrchk(cudaMemcpy(h_nnzPerVector,d_nnzPerVector,w_size*sizeof(int),cudaMemcpyDeviceToHost));
+
+
   printf("Percentage of NNZ elements in weight matrix using threshold %f = %f%%\n", weightThreshold,(100.00*nnz/(w_size*w_size)));
  
 
   //Allocating device memory
-  cudaMalloc((void**)&state_d,sizeof(bool) * size);
-  cudaMalloc((void**)&stable_d,sizeof(bool));
-  cudaMalloc((void**)&threshold_d,sizeof(float) * size);
-  cudaMalloc((void**)&sW_nnz_d,sizeof(float) * nnz);
-  cudaMalloc((void**)&sW_colInd_d,sizeof(int) * nnz);
-  cudaMalloc((void**)&sW_rowPtr_d,sizeof(int) * (w_row+1));
+  gpuErrchk(cudaMalloc((void**)&state_d,sizeof(bool) * size));
+  gpuErrchk(cudaMalloc((void**)&stable_d,sizeof(bool)));
+  gpuErrchk(cudaMalloc((void**)&threshold_d,sizeof(float) * size));
+  gpuErrchk(cudaMalloc((void**)&sW_nnz_d,sizeof(float) * nnz));
+  gpuErrchk(cudaMalloc((void**)&sW_colInd_d,sizeof(int) * nnz));
+  gpuErrchk(cudaMalloc((void**)&sW_rowPtr_d,sizeof(int) * (w_size+1)));
   
+  cusparseSdense2csr(handle,w_size,w_size,descrW,d_w_dense,lda,d_nnzPerVector,sW_nnz_d,sW_rowPtr_d,sW_colInd_d);
 
   // Copying data to device
   gpuErrchk(cudaMemcpy(threshold_d, thresholds.data(), size * sizeof(float),cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(sW_nnz_d, sW_nnz.data(), nnz*sizeof(float),cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(sW_colInd_d, sW_colInd.data(), nnz*sizeof(int),cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(sW_rowPtr_d, sW_rowPtr.data(),(w_row+1)*sizeof(int),cudaMemcpyHostToDevice));
 
 
 }
 
-GPUSparseHopfieldNetwork::~GPUSparseHopfieldNetwork() {
+GPUSparseGpuPreProHopfieldNetwork::~GPUSparseGpuPreProHopfieldNetwork() {
 
   //Free Device memory
   cudaFree(state_d);
@@ -110,7 +124,7 @@ GPUSparseHopfieldNetwork::~GPUSparseHopfieldNetwork() {
 
 }
 
-vector<bool> GPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
+vector<bool> GPUSparseGpuPreProHopfieldNetwork::evaluate(const vector<bool> &data) {
   // TODO: Implement me!
 
   bool stable_h;
@@ -118,16 +132,14 @@ vector<bool> GPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
 
   unsigned numThreads = 256;
   unsigned numBlocks = (size-1)/numThreads+1;
-
   copy(data.begin(), data.end(), data_h);
   gpuErrchk(cudaMemcpy(state_d, data_h, size * sizeof(bool),cudaMemcpyHostToDevice));
-
   do {
     stable_h = true;
     gpuErrchk(cudaMemcpy(stable_d, &stable_h, sizeof(bool),
                          cudaMemcpyHostToDevice));
 
-    gpu_sparse_recall_kernel<<< numBlocks, numThreads >>> 
+    gpu_sparse_gpu_prePro_recall_kernel<<< numBlocks, numThreads >>> 
     (size, state_d, threshold_d, sW_nnz_d, sW_colInd_d, sW_rowPtr_d, stable_d);
 
 
