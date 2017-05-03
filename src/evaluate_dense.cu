@@ -20,9 +20,9 @@ __global__ void gpu_dense_recall_kernel(size_t size,
     float value = 0.0f;
     for (size_t k = 0; k < size; ++k) {
       if (state[k])
-        value += weights[i * size + k];
+        value += weights[i + k * size];
       else
-        value -= weights[i * size + k];
+        value -= weights[i + k * size];
     }
 
     bool update = value > thresholds[i];
