@@ -6,7 +6,7 @@
 #include <cassert>
 #include <iostream>
 
-#define DEFAULT_WEIGHT_THRESHOLD 0.2
+#define DEFAULT_WEIGHT_THRESHOLD 0.1
 
 // Some macros...
 #define cudaCheck(stmt)                                                 \
@@ -122,6 +122,9 @@ public:
   
 protected:
   const float weightThreshold;
+  std::vector<float> sW_nnz;
+  std::vector<int> sW_colInd;
+  std::vector<int> sW_rowPtr;
 };
 
 class CPUSparseHopfieldNetwork : public SparseHopfieldNetwork {
@@ -135,9 +138,6 @@ public:
 
 protected:
   std::vector<float> thresholds;
-  std::vector<float> sW_nnz;
-  std::vector<int> sW_colInd;
-  std::vector<int> sW_rowPtr;
 };
 
 class GPUSparseHopfieldNetwork : public SparseHopfieldNetwork {
@@ -159,11 +159,37 @@ protected:
   float *sW_nnz_d;     // Number of Non zero elements
   int *sW_colInd_d;    // Number of Non zero elements
   int *sW_rowPtr_d;    // size+1
-  std::vector<float> sW_nnz;
-  std::vector<int> sW_colInd;
-  std::vector<int> sW_rowPtr;
 
 };
+
+class GPUSparseQueueHopfieldNetwork : public SparseHopfieldNetwork {
+public:
+  GPUSparseQueueHopfieldNetwork(const std::vector<float> &thresholds,
+                           const std::vector<std::vector<float>> &weights,
+                           float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
+  ~GPUSparseQueueHopfieldNetwork();
+  
+  std::vector<bool> evaluate(const std::vector<bool> &data);
+  
+protected:
+  // TODO: Fill in representation of a sparse Hopfield network for the device
+  //float *thresholds; // size
+  //float *weights;    // size * size
+  bool *stable_d;
+  bool *state_d;
+  float *threshold_d;  // size
+  float *sW_nnz_d;     // Number of Non zero elements
+  int *sW_colInd_d;    // Number of Non zero elements
+  int *sW_rowPtr_d;    // size+1
+  int *nodePtr;
+  
+
+};
+
+
+
+
+
 
 // Factory class for Hopfield networks
 class Evaluation {
@@ -261,5 +287,20 @@ public:
   }
   std::string getName() const { return "GPU sparse"; }
 };
+
+
+class GPUSparseQueueEvaluation : public SparseEvaluation {
+public:
+  GPUSparseQueueEvaluation(float weightThreshold=DEFAULT_WEIGHT_THRESHOLD) :
+    SparseEvaluation(weightThreshold) {}
+  ~GPUSparseQueueEvaluation() {}
+  
+  HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                       const std::vector<std::vector<float>> &weights) {
+    return new GPUSparseQueueHopfieldNetwork(thresholds, weights, weightThreshold);
+  }
+  std::string getName() const { return "GPU sparse"; }
+};
+
 
 Evaluation *getEvaluation(const std::string &name);
