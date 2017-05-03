@@ -13,15 +13,19 @@ int main(int argc, char ** argv) {
   srand(time(NULL)); // use current time to seed random number generator
   string cities = "cities";
 
-  if (argc == 2) {
+  if (argc >= 2) {
     cities = string(argv[1]);
     printf("reading cities from file named %s\n", argv[1]);
   } else {
     printf("reading cities from file named 'cities'\n");
   }
+  float gamma = 0.0;
+  if (argc >= 3) {
+    gamma = atof(argv[2]);
+  }
 
   // Initialize TSP
-  TSP_graph tsp;
+  TSP_graph tsp(gamma);
   ifstream in;
 
   in.open(cities);
