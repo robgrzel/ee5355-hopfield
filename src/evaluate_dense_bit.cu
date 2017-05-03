@@ -27,9 +27,9 @@ __global__ void gpu_dense_bit_recall_kernel(size_t size,
         size_t idx = j * WORD_SIZE + k;
         if (idx < size) {
           if (s >> k & 1)
-            value += weights[i * size + idx];
+            value += weights[i + idx * size];
           else
-            value -= weights[i * size + idx];
+            value -= weights[i + idx * size];
         }
       }
     }
