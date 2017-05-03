@@ -17,48 +17,31 @@ __global__ void gpu_dense_bit_recall_kernel(size_t size,
                                             float *thresholds,
                                             float *weights,
                                             bool *stable) {
-  size_t i = blockIdx.x;
-  size_t wordIdx = i / WORD_SIZE;
-  size_t bitIdx = i % WORD_SIZE;
+  size_t i = blockIdx.x * blockDim.x + threadIdx.x;
 
-  // Compute values in a strided pattern
-  float value = 0.0f;
-  for (unsigned j = 0; j < numWords; j++) {
-    WORD s = states[j];
-    for (size_t k = threadIdx.x; k < size; k += BLOCK_SIZE) {
-      size_t idx = j * WORD_SIZE + k;
-      if (idx < size) {
-	if ((s >> k) & 1)
-	  value += weights[i * size + idx];
-	else
-	  value -= weights[i * size + idx];
+  if (i < size) {
+    float value = 0.0f;
+    for (unsigned j = 0; j < numWords; j++) {
+      WORD s = states[j];
+      for (size_t k = 0; k < WORD_SIZE; ++k) {
+        size_t idx = j * WORD_SIZE + k;
+        if (idx < size) {
+          if (s >> k & 1)
+            value += weights[i * size + idx];
+          else
+            value -= weights[i * size + idx];
+        }
       }
     }
-  }
 
-  __shared__ float values[BLOCK_SIZE];
-  values[threadIdx.x] = value;
-  __syncthreads();
-
-  // Perform reduction
-  for (uint8_t stride = 1; stride < BLOCK_SIZE; stride <<= 1) {
-    if (((threadIdx.x + 1) & ((stride << 1) - 1)) == 0) {
-      values[threadIdx.x] += values[threadIdx.x - stride];
+    bool newState = value > thresholds[i];
+    bool oldState = (states[i / WORD_SIZE] >> (i % WORD_SIZE)) & 1;
+    if (newState != oldState) {
+      *stable = false;
     }
-    __syncthreads();
-  }
-
-  value = values[BLOCK_SIZE - 1];
-  __syncthreads();
-  
-  // Perform update
-  bool newState = value > thresholds[i];
-  bool oldState = (states[wordIdx] >> bitIdx) & 1;
-
-  if (newState != oldState) {
-    if (threadIdx.x == 0)
-      atomicXor(states + wordIdx, 1 << bitIdx);
-    *stable = false;
+    // Set each bit of according to newState in each thread of the warp
+    WORD newStates = __ballot(newState);
+    states[i / WORD_SIZE] = newStates;
   }
 }
 
@@ -78,7 +61,7 @@ GPUDenseBitHopfieldNetwork::GPUDenseBitHopfieldNetwork(const std::vector<float> 
   cudaCheck(cudaMemcpy(weightsDev, weightArray, size * size * sizeof(float),
                        cudaMemcpyHostToDevice));
   
-  delete[] weightArray;
+                       delete[] weightArray;
 }
 
 GPUDenseBitHopfieldNetwork::~GPUDenseBitHopfieldNetwork() {
@@ -95,25 +78,24 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
 
   WORD *stateDev;
   bool *stableDev;
+  
+  unsigned numBlocks = size / BLOCK_SIZE;
+
+  if (size % BLOCK_SIZE) numBlocks++;
 
   cudaCheck(cudaMalloc((void**) &stateDev, sizeof(WORD) * numWords));
   cudaCheck(cudaMalloc((void**) &stableDev, sizeof(bool)));
 
-  //cout << endl;
-  //cout << endl;
   for (size_t i = 0; i < numWords; i++) {
     WORD s = 0;
     for (size_t j = 0; j < WORD_SIZE; j++) {
       size_t idx = i * WORD_SIZE + j;
       if (idx < size) {
         s |= (data[idx] << j);
-	cout << data[idx];
       }
     }
-    //cout << " ";
     dataArray[i] = s;
   }
-  //cout << endl;
   
   cudaCheck(cudaMemcpy(stateDev, dataArray, numWords * sizeof(WORD),
                        cudaMemcpyHostToDevice));
@@ -123,7 +105,7 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
     cudaCheck(cudaMemcpy(stableDev, &stable, sizeof(bool),
                          cudaMemcpyHostToDevice));
 
-    gpu_dense_bit_recall_kernel<<< size, BLOCK_SIZE >>>
+    gpu_dense_bit_recall_kernel<<< numBlocks, BLOCK_SIZE >>>
       (size, numWords, stateDev, thresholdsDev, weightsDev, stableDev);
     cudaCheck(cudaDeviceSynchronize());
 
@@ -142,16 +124,12 @@ vector<bool> GPUDenseBitHopfieldNetwork::evaluate(const vector<bool> &data) {
       size_t idx = i * WORD_SIZE + j;
       if (idx < size) {
         state[idx] = (dataArray[i] >> j) & 1;
-	cout << state[idx];
       }
     }
-    //cout << " ";
   }
-  //cout << endl;
 
   cudaFree(stateDev);
   cudaFree(stableDev);
 
   return state;
 }
-
