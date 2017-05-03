@@ -21,6 +21,8 @@ Evaluation *getEvaluation(const string &name) {
     return new GPUSparseEvaluation;
   else if (name == "gpu_sparse_queue")
     return new GPUSparseQueueEvaluation;
+  else if (name == "gpu_sparse_gpp")
+    return new GPUSparseGpuPreProEvaluation;
   else {
     cerr << "Unknown evaluation algorithm " << name << endl;
     exit(1);
