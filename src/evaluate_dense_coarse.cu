@@ -7,7 +7,7 @@
 #include <iostream>
 using namespace std;
 
-#define COARSEN 4
+#define COARSEN 2
 #define BLOCK_SIZE 32
 
 __global__ void gpu_dense_coarse_recall_kernel(size_t size,
@@ -15,29 +15,48 @@ __global__ void gpu_dense_coarse_recall_kernel(size_t size,
 					       float * thresholds,
 					       float * weights,
 					       bool * stable) {
-  extern __shared__ bool localState[];
+  extern __shared__ float rowWeights[];
 
-  size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t i = blockIdx.x;
 
-  if (i < size) {
-    bool localStable = true;
+  for (size_t j = threadIdx.x; j < size; j += BLOCK_SIZE) {
+    rowWeights[j] = weights[i * size + j];
+  }
+  __syncthreads();
 
-    for (size_t j = 0; j < COARSEN; j++) {
-      float value = 0.0f;
-      for (size_t k = 0; k < size; ++k) {
-	if (state[k])
-	  value += weights[i * size + k];
-	else
-	  value -= weights[i * size + k];
-      }
+  __shared__ float values[BLOCK_SIZE];
 
-      bool update = value > thresholds[i];
-      localStable &= (update == state[i]);
-      state[i] = update;
+  for (unsigned j = 0; j < COARSEN; j++) {
+    // Compute values in a strided pattern
+    float value = 0.0f;
+    for (size_t k = threadIdx.x; k < size; k += BLOCK_SIZE) {
+      if (state[k])
+	value += rowWeights[k];
+      else
+	value -= rowWeights[k];
     }
-    
-    if (!localStable)
+
+    values[threadIdx.x] = value;
+    __syncthreads();
+
+    // Perform reduction
+    for (uint8_t stride = 1; stride < BLOCK_SIZE; stride <<= 1) {
+      if (((threadIdx.x + 1) & ((stride << 1) - 1)) == 0) {
+	values[threadIdx.x] += values[threadIdx.x - stride];
+      }
+      __syncthreads();
+    }
+
+    value = values[BLOCK_SIZE - 1];
+    __syncthreads();
+
+    // Perform update
+    bool update = value > thresholds[i];
+    if (j == COARSEN - 1 && update != state[i])
       *stable = false;
+    state[i] = update;
+
+    //__threadfence();
   }
 }
 
@@ -71,9 +90,6 @@ vector<bool> GPUDenseCoarseHopfieldNetwork::evaluate(const vector<bool> &data) {
 
   bool *stateDev;
   bool *stableDev;
-  unsigned numBlocks = size / BLOCK_SIZE;
-
-  if (size % BLOCK_SIZE) numBlocks++;
 
   cudaCheck(cudaMalloc((void**) &stateDev, sizeof(bool) * size));
   cudaCheck(cudaMalloc((void**) &stableDev, sizeof(bool)));
@@ -87,7 +103,7 @@ vector<bool> GPUDenseCoarseHopfieldNetwork::evaluate(const vector<bool> &data) {
     cudaCheck(cudaMemcpy(stableDev, &stable, sizeof(bool),
                          cudaMemcpyHostToDevice));
 
-    gpu_dense_coarse_recall_kernel<<< numBlocks, BLOCK_SIZE, size * sizeof(bool) >>>
+    gpu_dense_coarse_recall_kernel<<< size, BLOCK_SIZE, size * sizeof(float) >>>
       (size, stateDev, thresholdsDev, weightsDev, stableDev);
     cudaCheck(cudaDeviceSynchronize());
 
