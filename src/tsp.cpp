@@ -8,15 +8,12 @@
 #include "TSP_graph.hpp"
 using namespace std;
 
-#define GAMMA 1
-#define THRESHOLD (-GAMMA/2)
-
 int main() {
   srand(time(NULL)); // use current time to seed random number generator
   // Initialize TSP
   TSP_graph tsp;
-  int numCities = 0;
-  numCities = (rand() % 3) + 1;
+  unsigned numCities = 0;
+  numCities = (rand() % 11) + 5;
   for (unsigned i = 0; i < numCities; i++) {
     int x = rand() % 100;
     int y = rand() % 100;
@@ -38,18 +35,20 @@ int main() {
   x is stored row-major ie, x = {(S1, 1), (S1, 2)...}
   */
 
-  vector<float> thresholds(tsp.size()*tsp.size(), THRESHOLD);
+  vector<float> thresholds(tsp.size()*tsp.size(), tsp.get_threshold());
   tsp.calculate_weights();
   CPUDenseHopfieldNetwork network(thresholds, tsp.get_weights());
-  // network.evaluate(data);
+  data = network.evaluate(data);
 
   for (int i = 0; i < tsp.size(); ++i)
   {
     for (int k = 0; k < tsp.size(); ++k)
     {
-      printf("%d ", data[(i*tsp.size())+k]);
+      printf("%d ", data[(i*tsp.size())+k] ? 1 : 0);
     }
+    printf("\n");
   }
+  printf("\n");
 
   // float E_tsp = 0.0;
   // float L = 0.0;

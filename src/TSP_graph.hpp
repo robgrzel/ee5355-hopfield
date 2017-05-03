@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstdio>
 #include <iostream>
+
 using namespace std;
 class TSP_graph {
 private:
@@ -15,6 +16,13 @@ private:
   float threshold;
 
 public:
+
+  TSP_graph() : gamma(10), threshold(-gamma / 2) {}
+
+  float get_threshold() const {
+    return threshold;
+  }
+
   // add a city at point p
   void add(const Point& p) {
     cities.push_back(p);
@@ -56,8 +64,8 @@ public:
   }
 
   vector<vector<float> > calculate_weights() {
-    w = vector<vector<float> > (size(), vector<float>(size(), 0));
-    printf("weights size = %d\n", w.size());
+    w = vector<vector<float> > (size() * size(), vector<float>(size() * size(), 0));
+    printf("weights size = %lu\n", w.size());
     // calculate the weight matrix
     for (int k = 0; k < size(); ++k)
     {
@@ -67,7 +75,7 @@ public:
         {
           for (int j = 0; j < size(); ++j)
           {
-            printf("weight calculated for (i=%d, k=%d) to (j=%d, k+1=%d\n", i,k,j,k_plus_1);
+            // printf("weight calculated for (i=%d, k=%d) to (j=%d, k+1=%d\n", i,k,j,k_plus_1);
             float t = ((i == j) || (k == k_plus_1))?0:-gamma;
 
             w[(k * size()) + i][(k_plus_1 * size()) + j] = -dist_between(i, j) + t;
@@ -100,8 +108,8 @@ public:
   }
 
   vector<vector<float> > get_weights() {
-    printf("Returning the following weights matrix\n");
-    print_weights();
+    // printf("Returning the following weights matrix\n");
+    // print_weights();
     return w;
   }
 }; // class TSP_graph
