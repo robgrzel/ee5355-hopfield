@@ -14,10 +14,6 @@ vector<bool> CPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
     stable = true;
 #pragma omp parallel for
     for (size_t i = 0; i < size; i++) {
-      /*for (size_t j = 0; j < size; j++) {
-        cout << state[j] << " ";
-        }
-        cout << endl;*/
       float value = 0;
       for (size_t k = 0; k < size; k++) {
         if (state[k])

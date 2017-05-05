@@ -6,7 +6,7 @@
 #include <cassert>
 #include <iostream>
 
-#define DEFAULT_WEIGHT_THRESHOLD 0.01
+#define DEFAULT_WEIGHT_THRESHOLD 0.21
 
 // Some macros...
 #define cudaCheck(stmt)                                                 \
