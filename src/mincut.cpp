@@ -2,6 +2,9 @@
 #include "mincut.hpp"
 #include "hopfield.hpp"
 #include <assert.h>
+#include <iostream>
+#include "utils.hpp"
+#include "chrono"
 /*
  * Just returns the last node of the graph
  *
@@ -21,7 +24,9 @@ unsigned MinCutGraph::pickStation() {
  * TODO: Is a deepcopy required?
  */
 std::vector<float> MinCutGraph::generateThresholds(unsigned station) {
-    return weights[station];
+    std::vector<float> thresholds = weights[station];
+    thresholds.erase(thresholds.begin() + station);
+    return thresholds;
 }
 
 
@@ -41,10 +46,8 @@ std::vector<std::vector<float> > MinCutGraph::generateWeights(unsigned station) 
      */
     std::vector<std::vector<float> > hopfieldW = weights;
     hopfieldW.erase(hopfieldW.begin() + station);
-
     for (unsigned i = 0; i < hopfieldW.size(); i++)
         hopfieldW[i].erase(hopfieldW[i].begin() + station);
-
     return hopfieldW;
 }
 
@@ -62,6 +65,7 @@ unsigned MinCutGraph::mapToGraphIndex(unsigned station, unsigned hopfieldIndex) 
  *
  */
 unsigned MinCutGraph::mapToHopfieldIndex(unsigned station, unsigned graphIndex) {
+    assert(graphIndex != station);
     return (graphIndex < station) ? graphIndex : graphIndex-1;
 }
 
@@ -73,8 +77,9 @@ std::vector<bool> MinCutGraph::generateInitialStates() {
     unsigned size = weights.size()-1;
     std::vector<bool> states(size);
     for (unsigned i = 0; i < size; i++) {
-        states.push_back(false);
+        states[i] = (rand() % 2 > 0) ? true : false;
     }
+    return states;
 }
 
 /*
@@ -83,13 +88,26 @@ std::vector<bool> MinCutGraph::generateInitialStates() {
  */
 std::vector<std::vector<unsigned> > MinCutGraph::partitionGraph(Evaluation *const evaluationImpl) {
     unsigned station = pickStation();
-    std::vector<std::vector<float> > weights = generateWeights(station);
+    std::vector<std::vector<float> > hopfieldW = generateWeights(station);
     std::vector<float> thresholds = generateThresholds(station);
 
+    /*std::cout << "\nhopfield weights:\n";
+    printVector(hopfieldW);
+    std::cout << "\nhopfield thresholds:\n";
+    printVector(thresholds);*/
     
-	HopfieldNetwork* network = evaluationImpl->makeHopfieldNetwork(thresholds, weights);
-    std::vector<bool> states = network->evaluate(generateInitialStates());
-    
+	HopfieldNetwork* network = evaluationImpl->makeHopfieldNetwork(thresholds, hopfieldW);
+
+    std::vector<bool> initialStates = generateInitialStates();
+    /*std::cout << "\ninitial states:\n";
+    printVector(initialStates);*/
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    std::vector<bool> states = network->evaluate(initialStates);    
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = t2 - t1;
+    std::cout << diff.count() << " sec" << std::endl;
+
     std::vector<std::vector<unsigned> > partitions;
     partitions.push_back(std::vector<unsigned>());
     partitions.push_back(std::vector<unsigned>());
@@ -99,8 +117,37 @@ std::vector<std::vector<unsigned> > MinCutGraph::partitionGraph(Evaluation *cons
         if (states[i]) partitions[1].push_back(id);
         else partitions[0].push_back(id);
     }
-
-    partitions[1].push_back(station);
+    
+    //station to false --> weights to thresholds
+    //station to true --> weights to -thresholds
+    partitions[0].push_back(station);
     
     return partitions;
+}
+
+MinCutGraph::MinCutGraph(unsigned numVertices) {
+    weights.resize(numVertices, std::vector<float>(numVertices, 0));
+    for (unsigned i = 0; i < numVertices; i++) {
+        for (unsigned j = i+1; j < numVertices; j++) {
+            float val = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            //if (rand() % 2 > 0) 
+                //val = -val;
+            weights[i][j] = val;
+            weights[j][i] = val;
+        }
+    }
+
+    /*unsigned i = 0;
+    while (i < numVertices*(numVertices-1)/4) {
+        unsigned x = rand() % numVertices;
+        unsigned y = rand() % numVertices;
+        if (weights[x][y] != 0) {
+            weights[x][y] = weights[y][x] = 0;
+            i++;
+        }
+    }*/
+}
+
+std::vector<std::vector<float> > MinCutGraph::getWeights() {
+    return weights;
 }
