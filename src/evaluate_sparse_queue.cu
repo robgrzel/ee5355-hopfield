@@ -55,45 +55,14 @@ GPUSparseQueueHopfieldNetwork::GPUSparseQueueHopfieldNetwork(const std::vector<f
                                                    const std::vector<std::vector<float>> &weights,
                                                    float weightThreshold) :
   SparseHopfieldNetwork(thresholds, weights, weightThreshold) {
-
-  //   Convering dense   //
-  //   weight matrix to  //
-  //    Sparse matrix    //
-  
-  gpuErrchk(cudaMalloc((void**)&nodePtr,sizeof(int)));
-
-  int w_size = (int)size;
-  int w_col = w_size;
-  int w_row = w_size;
-
-  int nnz=0;
-  int rowPtr = 0;
-  for(int i=0; i < w_row; ++i)
-  {
-	sW_rowPtr.push_back(rowPtr);
-	for(int j=0; j < w_col; ++j)
-	{
-		if(weights[i][j]*weights[i][j]>weightThreshold*weightThreshold)
-		{
-			sW_nnz.push_back(weights[i][j]);
-			sW_colInd.push_back(j);
-			++nnz;	
-		}
-	}
-	rowPtr=nnz;
-  }
-  
-  sW_rowPtr.push_back(rowPtr); // Last pointer equal number of NNZ elements
-  //printf("Percentage of NNZ elements in weight matrix using threshold %f = %f%%\n", weightThreshold,(100.00*nnz/(w_size*w_size)));
- 
-
   //Allocating device memory
-  cudaMalloc((void**)&state_d,sizeof(bool) * size);
-  cudaMalloc((void**)&stable_d,sizeof(bool));
-  cudaMalloc((void**)&threshold_d,sizeof(float) * size);
-  cudaMalloc((void**)&sW_nnz_d,sizeof(float) * nnz);
-  cudaMalloc((void**)&sW_colInd_d,sizeof(int) * nnz);
-  cudaMalloc((void**)&sW_rowPtr_d,sizeof(int) * (w_row+1));
+  gpuErrchk(cudaMalloc((void**)&nodePtr,sizeof(int)));
+  gpuErrchk(cudaMalloc((void**)&state_d,sizeof(bool) * size));
+  gpuErrchk(cudaMalloc((void**)&stable_d,sizeof(bool)));
+  gpuErrchk(cudaMalloc((void**)&threshold_d,sizeof(float) * size));
+  gpuErrchk(cudaMalloc((void**)&sW_nnz_d,sizeof(float) * nnz));
+  gpuErrchk(cudaMalloc((void**)&sW_colInd_d,sizeof(int) * nnz));
+  gpuErrchk(cudaMalloc((void**)&sW_rowPtr_d,sizeof(int) * (w_row+1)));
   
 
   // Copying data to device

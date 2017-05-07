@@ -115,13 +115,13 @@ class SparseHopfieldNetwork : public HopfieldNetwork {
 public:
   SparseHopfieldNetwork(const std::vector<float> &thresholds,
                         const std::vector<std::vector<float>> &weights,
-                        float weightThreshold=DEFAULT_WEIGHT_THRESHOLD) :
-    HopfieldNetwork(thresholds, weights),
-    weightThreshold(weightThreshold) {}
+                        float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
   virtual ~SparseHopfieldNetwork() {}
   
 protected:
   const float weightThreshold;
+  int w_size, w_col, w_row;
+  int nnz, rowPtr;
   std::vector<float> sW_nnz;
   std::vector<int> sW_colInd;
   std::vector<int> sW_rowPtr;
@@ -131,7 +131,9 @@ class CPUSparseHopfieldNetwork : public SparseHopfieldNetwork {
 public:
   CPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
                            const std::vector<std::vector<float>> &weights,
-                           float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
+                           float weightThreshold=DEFAULT_WEIGHT_THRESHOLD):
+    SparseHopfieldNetwork(thresholds, weights, weightThreshold), 
+    thresholds(thresholds) {}
   ~CPUSparseHopfieldNetwork() {}
   
   std::vector<bool> evaluate(const std::vector<bool> &data);

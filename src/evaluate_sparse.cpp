@@ -6,37 +6,34 @@
 #include <iostream>
 using namespace std;
 
-CPUSparseHopfieldNetwork::CPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
-                                                   const std::vector<std::vector<float>> &weights,
-                                                   float weightThreshold) :
-  SparseHopfieldNetwork(thresholds, weights, weightThreshold), 
-    thresholds(thresholds) {
+SparseHopfieldNetwork::SparseHopfieldNetwork(const std::vector<float> &thresholds,
+                                             const std::vector<std::vector<float>> &weights,
+                                             float weightThreshold) :
+    HopfieldNetwork(thresholds, weights),
+    weightThreshold(weightThreshold),
+    w_size(size), w_col(w_size), w_row(w_size),
+    nnz(0), rowPtr(0),
+    sW_rowPtr(w_row + 1) {
   // Converting dense weight matrix to sparse matrix
-  size_t size = thresholds.size(); //size threshold = size data
-  int w_size = (int)size;
-  int w_col = w_size;
-  int w_row = w_size;
-
-
-  int nnz=0;
-  int rowPtr = 0;
   for(int i=0; i < w_row; ++i)
   {
-	sW_rowPtr.push_back(rowPtr);
+	sW_rowPtr[i] = rowPtr;
 	for(int j=0; j < w_col; ++j)
 	{
 		if(weights[i][j]*weights[i][j]>weightThreshold*weightThreshold)
 		{
+                  //cout << "Entering critical" << endl;
 			sW_nnz.push_back(weights[i][j]);
 			sW_colInd.push_back(j);
 			++nnz;	
+                        //cout << "Exiting critical" << endl;
 		}
 	}
 	rowPtr=nnz;
 
   }
   
-  sW_rowPtr.push_back(rowPtr); // Last pointer equal number of NNZ elements
+  sW_rowPtr[w_row] = rowPtr; // Last pointer equal number of NNZ elements
  
 
   //Sparse matrix Debuging code
