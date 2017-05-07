@@ -50,10 +50,7 @@ int main(int argc, char ** argv) {
   x is stored row-major ie, x = {(S1, 1), (S1, 2)...}
   */
 
-  vector<float> thresholds(tsp.size()*tsp.size(), tsp.get_threshold());
-  tsp.calculate_weights();
-  tsp.print_weights();
-  CPUDenseHopfieldNetwork network(thresholds, tsp.get_weights());
+  CPUDenseHopfieldNetwork network(tsp.get_thresholds(), tsp.get_weights());
   data = network.evaluate(data);
 
   for (int i = 0; i < tsp.size(); ++i) {

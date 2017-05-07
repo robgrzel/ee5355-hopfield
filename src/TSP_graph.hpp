@@ -7,7 +7,6 @@
 #include <cstdio>
 #include <iostream>
 
-#define K_DELTA(i,j) (i==j)
 using namespace std;
 class TSP_graph {
 private:
@@ -91,7 +90,7 @@ public:
         printf("Node (city=%d, time=%d)\n", i, k1);
         for (int j = 0; j < size(); ++j) {
           for (int k2 = 0; k2 < size(); ++k2) {
-            printf("%2f\t", w[(i * size()) + k1][(j * size()) + k2]);
+            printf("%4.4f\t", w[(i * size()) + k1][(j * size()) + k2]);
           }
           cout<<endl;
         }
@@ -101,11 +100,16 @@ public:
   }
 
   vector<vector<float> > get_weights() {
+    calculate_weights();
 #ifdef DEBUG
     printf("Returning the following weights matrix\n");
     print_weights();
 #endif
     return w;
+  }
+
+  vector<float> get_thresholds() {
+    return vector<float>(size() * size(), threshold);
   }
 }; // class TSP_graph
 #endif
