@@ -13,7 +13,7 @@ using namespace std;
 #define STEP_SIZE 50
 #define TRIALS 5
 
-#define EVALUATION {"cpu_dense", "gpu_dense", "gpu_dense_block", "gpu_sparse", "gpu_sparse_queue"}
+#define EVALUATION {"cpu_dense", "gpu_dense", "gpu_dense_block", "cpu_sparse", "gpu_sparse", "gpu_sparse_queue"}
 
 #define NUM_VECTORS 100
 #define KEY_SIZE_PROP 0.25
@@ -26,7 +26,7 @@ int main() {
   for (unsigned i = 0; i < numEvaluationAlgorithms; i++) {
     cout << "," << getEvaluation(evaluationAlgorithms[i])->getName();
   }
-  cout << ",,Data Size";
+  cout << ",,,Data Size";
   for (unsigned i = 0; i < numEvaluationAlgorithms; i++) {
     cout << "," << getEvaluation(evaluationAlgorithms[i])->getName();
   }
@@ -107,7 +107,7 @@ int main() {
     for (double time : times) {
       cout << "," << time;
     }
-    cout << ",," << size;
+    cout << ",,," << size;
     for (double accuracy : accuracies) {
       cout << "," << accuracy;
     }
