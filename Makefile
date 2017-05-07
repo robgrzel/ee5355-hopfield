@@ -47,11 +47,11 @@ CXXFLAGS    += -fopenmp -fno-strict-aliasing -m64 -std=gnu++11 -Wall -Wextra -DV
 LIB         += -lgomp -L/usr/local/cuda-8.0/lib64/ -lcudart -lcusparse
 
 ifeq ($(dbg),1)
-  CXXFLAGS  += -g3 -ggdb
-  NVCCFLAGS += -g -G -lineinfo
+  CXXFLAGS  += -g3 -ggdb -DDEBUG
+  NVCCFLAGS += -g -G -lineinfo -DDEBUG
 else
-  CXXFLAGS  += -O3 -DNDEBUG
-  NVCCFLAGS += -O3 -DNDEBUG
+  CXXFLAGS  += -O3
+  NVCCFLAGS += -O3
 endif
 
 ifeq ($(verbose),1)

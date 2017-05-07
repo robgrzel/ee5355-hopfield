@@ -12,7 +12,11 @@ vector<bool> CPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
   assert(data.size() == size);
   vector<bool> state = data;
   bool stable;
+
+#ifdef DEBUG
   int iters = 0;
+#endif
+
   do {
     stable = true;
 #pragma omp parallel for
@@ -33,6 +37,8 @@ vector<bool> CPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
       stable &= update == state[i];
       state[i] = update;
     }
+
+#ifdef DEBUG
     iters++;
     if((iters % 1000)==0) {
     printf("================================================\niteration %d\n", iters);
@@ -47,6 +53,10 @@ vector<bool> CPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
       printf("\n");
     }
     // usleep(1e4);
-  } while ((!stable) && (iters < 10000000000000000));
+  } while ((!stable) && (iters < 1000000000));
+#else
+  } while (!stable);
+#endif
+
   return state;
 }
