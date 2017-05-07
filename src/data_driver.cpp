@@ -26,7 +26,7 @@ int main() {
   for (unsigned i = 0; i < numEvaluationAlgorithms; i++) {
     cout << "," << getEvaluation(evaluationAlgorithms[i])->getName();
   }
-  cout << ",,,Data Size";
+  cout << ",,Data Size";
   for (unsigned i = 0; i < numEvaluationAlgorithms; i++) {
     cout << "," << getEvaluation(evaluationAlgorithms[i])->getName();
   }
@@ -107,7 +107,7 @@ int main() {
     for (double time : times) {
       cout << "," << time;
     }
-    cout << ",,," << size;
+    cout << ",," << size;
     for (double accuracy : accuracies) {
       cout << "," << accuracy;
     }

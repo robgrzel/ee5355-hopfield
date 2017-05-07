@@ -38,7 +38,9 @@ SparseHopfieldNetwork::SparseHopfieldNetwork(const std::vector<float> &threshold
 
   //Sparse matrix Debuging code
 
-  //printf("Percentage of NNZ elements in weight matrix using threshold %f = %f%%\n", weightThreshold,(100.00*nnz/(w_size*w_size)));
+#ifndef NDEBUG
+  printf("Percentage of NNZ elements in weight matrix using threshold %f = %f%%\n", weightThreshold,(100.00*nnz/(w_size*w_size)));
+#endif
 /*
    for (int f=0; f<nnz;++f)
       printf("%f  ",sW_nnz[f]);
