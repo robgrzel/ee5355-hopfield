@@ -84,7 +84,7 @@ GPUSparseQueueHopfieldNetwork::GPUSparseQueueHopfieldNetwork(const std::vector<f
   }
   
   sW_rowPtr.push_back(rowPtr); // Last pointer equal number of NNZ elements
-  printf("Percentage of NNZ elements in weight matrix using threshold %f = %f%%\n", weightThreshold,(100.00*nnz/(w_size*w_size)));
+  //printf("Percentage of NNZ elements in weight matrix using threshold %f = %f%%\n", weightThreshold,(100.00*nnz/(w_size*w_size)));
  
 
   //Allocating device memory
