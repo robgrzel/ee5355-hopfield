@@ -17,11 +17,7 @@ private:
 
 public:
 
-  TSP_graph(float g) : gamma(g), threshold(-g / 2.0) {}
-
-  float get_threshold() const {
-    return threshold;
-  }
+  TSP_graph(float g, float t) : gamma(g), threshold(t) {}
 
   // add a city at point p
   void add(const Point& p) {
@@ -63,18 +59,28 @@ public:
     return tour;
   }
 
+
+  // TODO: fix me!
+  float weight_bt(int i, int k1, int j, int k2) {
+    if (k1 == k2 || i == j)
+      return -dist_between(i, j) - gamma;
+    else if ((k1 + 1) % size() == k2 || (k2 + 1) % size() == k1)
+      return -dist_between(i, j);
+    else
+      return 0;
+  }
+
+
   vector<vector<float> > calculate_weights() {
-    w = vector<vector<float> > (size() * size(), vector<float>(size() * size(), 0));
+    w = vector<vector<float> > (size() * size(),
+                                vector<float>(size() * size(), 0));
     printf("weights size = %lu\n", w.size());
     // calculate the weight matrix
     for (int i = 0; i < size(); ++i) {
       for (int k1 = 0; k1 < size(); ++k1) {
         for (int j = 0; j < size(); ++j) {
           for (int k2 = 0; k2 < size(); ++k2) {
-            // printf("weight calculated for (i=%d, k1=%d) to (j=%d, k1+1=%d\n", i,k1,j,k2);
-            float t = ((i == j) || (k1 == k2))?-gamma:0;
-
-            w[(i * size()) + k1][(j * size()) + k2] = -dist_between(i, j) + t;
+            w[(i * size()) + k1][(j * size()) + k2] =  weight_bt(i, k1, j, k2);
           }
         }
       }
@@ -111,5 +117,34 @@ public:
   vector<float> get_thresholds() {
     return vector<float>(size() * size(), threshold);
   }
+
+  vector<int> get_tour(vector<vector<float> > data) {
+    vector<int> tour;
+    vector<bool> visited(size(), false);
+
+    for (int t = 0; t < size(); ++t) {
+      bool added = false;
+      for (int i = 0; i < size(); ++i) {
+        if (data[i][t]) {
+          if (visited[i]) {
+            printf("ERROR: not a valid tour (node %d already visited)\n", i);
+            return vector<int>();
+          } else if (added) {
+            printf("ERROR: not a valid tour (2 nodes visited at time %d)\n", t);
+            return vector<int>();
+          } else {
+            tour.push_back(i);
+          }
+        }
+      }
+      if (!added) {
+        printf("ERROR: not a valid tour (no node visited at time %d)\n", t);
+        return vector<int>(1, -1);
+      }
+    }
+    return tour;
+  }
+
+  
 }; // class TSP_graph
 #endif

@@ -8,10 +8,17 @@
 #include <iostream>
 using namespace std;
 
+#ifdef DEBUG
+#define NEIN(s) (!(s) && (iters < 1000000000))
+#else
+#define NEIN(s) (!(s))
+#endif
+
 vector<bool> CPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
   assert(data.size() == size);
   vector<bool> state = data;
   bool stable;
+  vector<bool> last = data;
 
 #ifdef DEBUG
   int iters = 0;
@@ -35,28 +42,29 @@ vector<bool> CPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
       bool update = value > thresholds[i];
 #pragma omp atomic
       stable &= update == state[i];
+      last[i] = state[i];
       state[i] = update;
     }
 
 #ifdef DEBUG
     iters++;
-    if((iters % 1000)==0) {
+    printf("\033c");
     printf("================================================\niteration %d\n", iters);
-      for (int i = 0; i < sqrt(size); ++i)
-      {
-        for (int k = 0; k < sqrt(size); ++k)
-        {
-          printf("%s ", state[(i*sqrt(size))+k] ? "ja    " : "nein  ");
-        }
-        printf("\n");
+    for (int i = 0; i < sqrt(size); ++i) {
+      for (int k = 0; k < sqrt(size); ++k) {
+        if (state[(i*sqrt(size))+k] == last[(i * sqrt(size)) + k])
+          printf("%s", state[(i*sqrt(size))+k] ? "1" : "0");
+        else
+          printf("\x1b[43m\x1b[31m%s\x1b[0m",
+                 state[(i*sqrt(size))+k] ? "1" : "0");
+
       }
       printf("\n");
     }
-    // usleep(1e4);
-  } while ((!stable) && (iters < 1000000000));
-#else
-  } while (!stable);
+    printf("\n");
 #endif
+
+  } while (NEIN(stable));
 
   return state;
 }

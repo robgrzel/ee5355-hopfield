@@ -20,12 +20,12 @@ int main(int argc, char ** argv) {
     printf("reading cities from file named 'cities'\n");
   }
   float gamma = 1.0f;
-  if (argc >= 3) {
-    gamma = atof(argv[2]);
-  }
+  if (argc >= 3) gamma = atof(argv[2]);
+  float threshold = -gamma / 2.0f;
+  if (argc >= 4) threshold = -atof(argv[3]);
 
   // Initialize TSP
-  TSP_graph tsp(gamma);
+  TSP_graph tsp(gamma, threshold);
   ifstream in;
 
   in.open(cities);
@@ -53,9 +53,10 @@ int main(int argc, char ** argv) {
   CPUDenseHopfieldNetwork network(tsp.get_thresholds(), tsp.get_weights());
   data = network.evaluate(data);
 
+  printf("\033c");
   for (int i = 0; i < tsp.size(); ++i) {
     for (int k = 0; k < tsp.size(); ++k) {
-      printf("%s ", data[(i*tsp.size())+k] ? "ja    " : "nein  ");
+      printf("%s", data[(i*tsp.size())+k] ? "1" : "0");
     }
     printf("\n");
   }
