@@ -4,16 +4,16 @@
 #
 ################################################################################
 
-EXECUTABLES := simple_test test_driver tsp
+EXECUTABLES := simple_test test_driver tsp queens_driver
 
 # CUDA source files (compiled with cudacc)
 CUFILES	    := evaluate_dense.cu evaluate_dense_coarse.cu evaluate_dense_bit.cu evaluate_sparse.cu
 # C/C++ source files (compiled with gcc / c++)
-CCFILES	    := hopfield.cpp evaluate_dense.cpp evaluate_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp
+CCFILES	    := hopfield.cpp evaluate_dense.cpp evaluate_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp queens.cpp
 # Header files included by any of CUFILES
-CUHEADERS   := hopfield.hpp TSP_graph.hpp
+CUHEADERS   := hopfield.hpp TSP_graph.hpp queens.hpp
 # Header files included by any of CCFILES
-CCHEADERS   := hopfield.hpp assoc_memory.hpp TSP_graph.hpp
+CCHEADERS   := hopfield.hpp assoc_memory.hpp TSP_graph.hpp queens.hpp
 
 SRCDIR      := src
 ROOTDIR     := .
