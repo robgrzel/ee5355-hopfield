@@ -197,12 +197,12 @@ protected:
 
 };
 
-class GPUSparseGpuPreProHopfieldNetwork : public SparseHopfieldNetwork {
+class GPUSparseWarpHopfieldNetwork : public SparseHopfieldNetwork {
 public:
-  GPUSparseGpuPreProHopfieldNetwork(const std::vector<float> &thresholds,
+  GPUSparseWarpHopfieldNetwork(const std::vector<float> &thresholds,
                            const std::vector<std::vector<float>> &weights,
                            float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
-  ~GPUSparseGpuPreProHopfieldNetwork();
+  ~GPUSparseWarpHopfieldNetwork();
   
   std::vector<bool> evaluate(const std::vector<bool> &data);
   
@@ -343,15 +343,15 @@ public:
 };
 
 
-class GPUSparseGpuPreProEvaluation : public SparseEvaluation {
+class GPUSparseWarpEvaluation : public SparseEvaluation {
 public:
-  GPUSparseGpuPreProEvaluation(float weightThreshold=DEFAULT_WEIGHT_THRESHOLD) :
+  GPUSparseWarpEvaluation(float weightThreshold=DEFAULT_WEIGHT_THRESHOLD) :
     SparseEvaluation(weightThreshold) {}
-  ~GPUSparseGpuPreProEvaluation() {}
+  ~GPUSparseWarpEvaluation() {}
   
   HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
                                        const std::vector<std::vector<float>> &weights) {
-    return new GPUSparseGpuPreProHopfieldNetwork(thresholds, weights, weightThreshold);
+    return new GPUSparseWarpHopfieldNetwork(thresholds, weights, weightThreshold);
   }
   std::string getName() const { return "GPU sparse with GPU pre processing"; }
 };
