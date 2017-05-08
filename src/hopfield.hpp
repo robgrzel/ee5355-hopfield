@@ -105,8 +105,7 @@ public:
   std::vector<bool> evaluate(const std::vector<bool> &data);
 
 protected:
-  std::vector<float> thresholds;
-  std::vector<std::vector<float> > weights;
+  CPUDenseHopfieldNetwork cpuNet;
   // Device memory
   float *thresholdsDev; // size
   float *weightsDev;    // size * size
