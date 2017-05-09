@@ -132,6 +132,8 @@ public:
                         const std::vector<std::vector<float>> &weights,
                         float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
   virtual ~SparseHopfieldNetwork() {}
+  void CSR_2_JDS();
+  std::vector<int> sort_indexes(std::vector<int> &v);
   
 protected:
   const float weightThreshold;
@@ -140,6 +142,11 @@ protected:
   std::vector<float> sW_nnz;
   std::vector<int> sW_colInd;
   std::vector<int> sW_rowPtr;
+  std::vector<float> jds_w_nnz;
+  std::vector<int> jds_w_colInd;
+  std::vector<int> jds_w_rowPtr;
+  std::vector<int> row;
+  std::vector<int> nnzPerRow;
 };
 
 class CPUSparseHopfieldNetwork : public SparseHopfieldNetwork {
@@ -173,6 +180,33 @@ protected:
   float *sW_nnz_d;     // Number of Non zero elements
   int *sW_colInd_d;    // Number of Non zero elements
   int *sW_rowPtr_d;    // size+1
+};
+
+
+
+class GPUSparseJDSHopfieldNetwork : public SparseHopfieldNetwork {
+public:
+  GPUSparseJDSHopfieldNetwork(const std::vector<float> &thresholds,
+                           const std::vector<std::vector<float>> &weights,
+                           float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
+  ~GPUSparseJDSHopfieldNetwork();
+  
+  std::vector<bool> evaluate(const std::vector<bool> &data);
+  
+protected:
+  bool *stable_d;
+  bool *state_d;
+  float *threshold_d;  // size
+  float *sW_nnz_d;     // Number of Non zero elements
+  int *sW_colInd_d;    // Number of Non zero elements
+  int *sW_rowPtr_d;    // size+1
+  float *jds_w_nnz_d;     // Number of Non zero elements
+  int *jds_w_colInd_d;    // Number of Non zero elements
+  int *jds_w_rowPtr_d;    // size+1
+  int *row_d;    // size
+  float * jdsT_w_nnz_d;
+  int  *jdsT_w_colInd_d, *jdsT_w_colStartIdx_d;
+
 };
 
 class GPUSparseQueueHopfieldNetwork : public SparseHopfieldNetwork {
@@ -324,7 +358,21 @@ public:
                                        const std::vector<std::vector<float>> &weights) {
     return new GPUSparseHopfieldNetwork(thresholds, weights, weightThreshold);
   }
-  std::string getName() const { return "GPU sparse"; }
+  std::string getName() const { return "GPU sparse - CSR"; }
+};
+
+
+class GPUSparseJDSEvaluation : public SparseEvaluation {
+public:
+  GPUSparseJDSEvaluation(float weightThreshold=DEFAULT_WEIGHT_THRESHOLD) :
+    SparseEvaluation(weightThreshold) {}
+  ~GPUSparseJDSEvaluation() {}
+  
+  HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                       const std::vector<std::vector<float>> &weights) {
+    return new GPUSparseJDSHopfieldNetwork(thresholds, weights, weightThreshold);
+  }
+  std::string getName() const { return "GPU sparse - JDS"; }
 };
 
 
@@ -352,7 +400,7 @@ public:
                                        const std::vector<std::vector<float>> &weights) {
     return new GPUSparseWarpHopfieldNetwork(thresholds, weights, weightThreshold);
   }
-  std::string getName() const { return "GPU sparse with GPU pre processing"; }
+  std::string getName() const { return "GPU sparse warp_parallel"; }
 };
 
 

@@ -19,8 +19,10 @@ Evaluation *getEvaluation(const string &name) {
     return new GPUDenseCutoffEvaluation;
   else if (name == "gpu_dense_coarse")
     return new GPUDenseCoarseEvaluation;
-  else if (name == "gpu_sparse")
+  else if (name == "gpu_sparse_csr")
     return new GPUSparseEvaluation;
+  else if (name == "gpu_sparse_jds")
+    return new GPUSparseJDSEvaluation;
   else if (name == "gpu_sparse_queue")
     return new GPUSparseQueueEvaluation;
   else if (name == "gpu_sparse_warp")

@@ -3,8 +3,46 @@
 #include <cstdint>
 #include <cassert>
 #include <vector>
+#include <algorithm>
 #include <iostream>
 using namespace std;
+
+
+
+std::vector<int> SparseHopfieldNetwork::sort_indexes( std::vector<int> &v) {
+
+  // initialize original index locations
+     std::vector<int> idx(v.size());
+       iota(idx.begin(), idx.end(), 0);
+  
+         // sort indexes based on comparing values in v
+           sort(idx.begin(), idx.end(),
+                  [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+  
+                    return idx;
+}
+
+
+void SparseHopfieldNetwork::CSR_2_JDS( )
+{
+  //Converting CSR to JDS
+
+   row=sort_indexes(nnzPerRow);
+
+   int jds_nnz=0;
+   for(int i=0; i <w_row;++i)
+   {
+     jds_w_rowPtr.push_back(jds_nnz);
+     for(int j =sW_rowPtr[row[i]]; j<sW_rowPtr[row[i]+1];++j){
+        jds_w_nnz.push_back(sW_nnz[j]);
+        jds_w_colInd.push_back(sW_colInd[j]);
+        jds_nnz++;
+     }
+    
+   }
+   
+     jds_w_rowPtr.push_back(jds_nnz);
+}
 
 SparseHopfieldNetwork::SparseHopfieldNetwork(const std::vector<float> &thresholds,
                                              const std::vector<std::vector<float>> &weights,
@@ -14,6 +52,7 @@ SparseHopfieldNetwork::SparseHopfieldNetwork(const std::vector<float> &threshold
     w_size(size), w_col(w_size), w_row(w_size),
     nnz(0), rowPtr(0),
     sW_rowPtr(w_row + 1) {
+
   // Converting dense weight matrix to sparse matrix
   for(int i=0; i < w_row; ++i)
   {
@@ -29,12 +68,14 @@ SparseHopfieldNetwork::SparseHopfieldNetwork(const std::vector<float> &threshold
                         //cout << "Exiting critical" << endl;
 		}
 	}
+        nnzPerRow.push_back(nnz-rowPtr);
 	rowPtr=nnz;
 
   }
   
   sW_rowPtr[w_row] = rowPtr; // Last pointer equal number of NNZ elements
  
+  //CSR_2_JDS();
 
   //Sparse matrix Debuging code
 
@@ -42,8 +83,9 @@ SparseHopfieldNetwork::SparseHopfieldNetwork(const std::vector<float> &threshold
   printf("Percentage of NNZ elements in weight matrix using threshold %f = %f%%\n", weightThreshold,(100.00*nnz/(w_size*w_size)));
 #endif
 /*
+printf("\n   CSR   \n");
    for (int f=0; f<nnz;++f)
-      printf("%f  ",sW_nnz[f]);
+      printf("%.2f  ",sW_nnz[f]);
    printf("\n");
    for (int f=0; f<nnz;++f)
       printf("%d  ",sW_colInd[f]);
@@ -51,8 +93,19 @@ SparseHopfieldNetwork::SparseHopfieldNetwork(const std::vector<float> &threshold
    for (int f=0; f<w_row+1;++f)
       printf("%d  ",sW_rowPtr[f]);
    printf("\n");
-*/
-  
+
+
+printf("\n   JDS   \n");
+   for (int f=0; f<nnz;++f)
+      printf("%.2f  ",jds_w_nnz[f]);
+   printf("\n");
+   for (int f=0; f<nnz;++f)
+      printf("%d  ",jds_w_colInd[f]);
+   printf("\n");
+   for (int f=0; f<w_row+1;++f)
+      printf("%d  ",jds_w_rowPtr[f]);
+   printf("\n");
+*/  
 }
 
 vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
