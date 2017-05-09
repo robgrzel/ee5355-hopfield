@@ -129,8 +129,8 @@ vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
 	}
 
       bool update = value > thresholds[i];
-#pragma omp atomic
-      stable &= update == state[i];
+      if (update != state[i])
+        stable = false;
       state[i] = update;
     }
   } while (!stable);
