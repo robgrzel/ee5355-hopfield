@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cassert>
 #include <vector>
+#include <numeric>
 #include <algorithm>
 #include <iostream>
 using namespace std;
@@ -12,14 +13,14 @@ using namespace std;
 std::vector<int> SparseHopfieldNetwork::sort_indexes( std::vector<int> &v) {
 
   // initialize original index locations
-     std::vector<int> idx(v.size());
-       iota(idx.begin(), idx.end(), 0);
+  std::vector<int> idx(v.size());
+  iota(idx.begin(), idx.end(), 0);
   
-         // sort indexes based on comparing values in v
-           sort(idx.begin(), idx.end(),
-                  [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+  // sort indexes based on comparing values in v
+  sort(idx.begin(), idx.end(),
+       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
   
-                    return idx;
+  return idx;
 }
 
 
@@ -41,7 +42,7 @@ void SparseHopfieldNetwork::CSR_2_JDS( )
     
    }
    
-     jds_w_rowPtr.push_back(jds_nnz);
+   jds_w_rowPtr.push_back(jds_nnz);
 }
 
 SparseHopfieldNetwork::SparseHopfieldNetwork(const std::vector<float> &thresholds,
@@ -116,7 +117,6 @@ vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
   do {
     stable = true;
 #pragma omp parallel for
-
     for (size_t i = 0; i < size; i++)
     { 
 	float value = 0;     
