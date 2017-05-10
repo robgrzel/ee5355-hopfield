@@ -69,6 +69,13 @@ int main() {
       diff = t2 - t1;
       cerr << diff.count() << " sec" << endl;
 
+      cerr << "Initializing network... " << flush;
+      t1 = chrono::high_resolution_clock::now();
+      mem.init();
+      t2 = chrono::high_resolution_clock::now();
+      diff = t2 - t1;
+      cerr << diff.count() << " sec" << endl;
+
       double time = numeric_limits<int>::max();
       float accuracy = 0;
       for (unsigned j = 0; j < TRIALS; j++) {
