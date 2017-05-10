@@ -8,8 +8,8 @@ using namespace std;
 
 // TODO: I think there is some sort of bug with this...
 void CPUStorkeyTraining::train(const vector<bool> &data,
-             vector<vector<float> > &weights,
-             unsigned numDataSets) {
+                               vector<vector<float> > &weights,
+                               unsigned numDataSets) {
   size_t size = data.size();
   vector<int8_t> elems(size);
   for (size_t i = 0; i < size; i++) {
