@@ -19,5 +19,6 @@ class Queens {
 
     void solve();
     void printSolution();
+    bool verifySolution();
 
 };

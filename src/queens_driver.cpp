@@ -21,10 +21,15 @@ int main(int argc, char ** argv) {
   gamma = atof(argv[2]);
   threshold = atof(argv[3]);
 
-  Queens nQueens(num, gamma, threshold);
+  unsigned repeats = 0;
+  do {
+    Queens nQueens(num, gamma, threshold);
 
-  nQueens.solve();
-  nQueens.printSolution();
+    nQueens.solve();
+    nQueens.printSolution();
+  } while (!nQueens.verifySolution());
+
+  printf("%d,%f,%f,%u\n", num, gamma, threshold, repeats);
 
   return 0;
 }
