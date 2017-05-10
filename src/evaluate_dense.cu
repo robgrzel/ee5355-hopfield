@@ -14,38 +14,23 @@ __global__ void gpu_dense_recall_kernel(size_t size,
                                         float * thresholds,
                                         float * weights,
                                         bool * stable) {
-  size_t i = blockIdx.x;
+  size_t i = blockIdx.x * blockDim.x + threadIdx.x;
 
-  // Compute values in a strided pattern
-  float value = 0.0f;
-  for (size_t k = threadIdx.x; k < size; k += BLOCK_SIZE) {
-    if (state[k])
-      value += weights[i * size + k];
-    else
-      value -= weights[i * size + k];
-  }
-
-  __shared__ float values[BLOCK_SIZE];
-  values[threadIdx.x] = value;
-  __syncthreads();
-
-  // Perform reduction
-  for (uint8_t stride = 1; stride < BLOCK_SIZE; stride <<= 1) {
-    if (((threadIdx.x + 1) & ((stride << 1) - 1)) == 0) {
-      values[threadIdx.x] += values[threadIdx.x - stride];
+  if (i < size) {
+    float value = 0.0f;
+    for (size_t k = 0; k < size; ++k) {
+      if (state[k])
+        value += weights[i + k * size];
+      else
+        value -= weights[i + k * size];
     }
-    __syncthreads();
-  }
 
-  value = values[BLOCK_SIZE - 1];
-  __syncthreads();
-  
-  // Perform update
-  bool update = value > thresholds[i];
-  if (update != state[i]) {
-    *stable = false;
+    bool update = value > thresholds[i];
+    if (update != state[i]) {
+      *stable = false;
+    }
+    state[i] = update;
   }
-  state[i] = update;
 }
 
 GPUDenseHopfieldNetwork::GPUDenseHopfieldNetwork(const std::vector<float> &thresholds,
@@ -78,6 +63,9 @@ vector<bool> GPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
 
   bool *stateDev;
   bool *stableDev;
+  unsigned numBlocks = size / BLOCK_SIZE;
+
+  if (size % BLOCK_SIZE) numBlocks++;
 
   cudaCheck(cudaMalloc((void**) &stateDev, sizeof(bool) * size));
   cudaCheck(cudaMalloc((void**) &stableDev, sizeof(bool)));
@@ -91,7 +79,7 @@ vector<bool> GPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
     cudaCheck(cudaMemcpy(stableDev, &stable, sizeof(bool),
                          cudaMemcpyHostToDevice));
 
-    gpu_dense_recall_kernel<<< size, BLOCK_SIZE >>>
+    gpu_dense_recall_kernel<<< numBlocks, BLOCK_SIZE >>>
       (size, stateDev, thresholdsDev, weightsDev, stableDev);
     cudaCheck(cudaDeviceSynchronize());
 
@@ -111,4 +99,3 @@ vector<bool> GPUDenseHopfieldNetwork::evaluate(const vector<bool> &data) {
 
   return state;
 }
-

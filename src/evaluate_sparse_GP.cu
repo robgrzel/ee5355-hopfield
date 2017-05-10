@@ -5,6 +5,10 @@
 #include <cassert>
 #include <vector>
 #include <iostream>
+
+#include <cuda_runtime.h>
+#include <cusparse_v2.h>
+#include <time.h>
 using namespace std;
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -16,7 +20,12 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
       if (abort) exit(code);
    }
 }
-__global__ void gpu_sparse_recall_kernel(size_t size,
+
+
+
+
+
+__global__ void gpu_sparse_gpu_prePro_recall_kernel(size_t size,
                                         bool * state,
                                         float * thresholds,
                                         float * sW_nnz,
@@ -28,9 +37,8 @@ __global__ void gpu_sparse_recall_kernel(size_t size,
    size_t node = blockIdx.x * blockDim.x + threadIdx.x;
    if (node < size) {
     float value = 0.0f;
-
     for (size_t k = sW_rowPtr[node]; k < sW_rowPtr[node+1]; ++k) 
-    {			
+    {	
 	if (state[sW_colInd[k]])
 		value += sW_nnz[k];
        	else
@@ -46,7 +54,7 @@ __global__ void gpu_sparse_recall_kernel(size_t size,
   
 }
 
-GPUSparseHopfieldNetwork::GPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
+GPUSparseGpuPreProHopfieldNetwork::GPUSparseGpuPreProHopfieldNetwork(const std::vector<float> &thresholds,
                                                    const std::vector<std::vector<float>> &weights,
                                                    float weightThreshold) :
   SparseHopfieldNetwork(thresholds, weights, weightThreshold) {
@@ -68,7 +76,7 @@ GPUSparseHopfieldNetwork::GPUSparseHopfieldNetwork(const std::vector<float> &thr
 
 }
 
-GPUSparseHopfieldNetwork::~GPUSparseHopfieldNetwork() {
+GPUSparseGpuPreProHopfieldNetwork::~GPUSparseGpuPreProHopfieldNetwork() {
 
   //Free Device memory
   cudaFree(state_d);
@@ -80,7 +88,7 @@ GPUSparseHopfieldNetwork::~GPUSparseHopfieldNetwork() {
 
 }
 
-vector<bool> GPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
+vector<bool> GPUSparseGpuPreProHopfieldNetwork::evaluate(const vector<bool> &data) {
   // TODO: Implement me!
 
   bool stable_h;
@@ -88,16 +96,14 @@ vector<bool> GPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
 
   unsigned numThreads = 256;
   unsigned numBlocks = (size-1)/numThreads+1;
-
   copy(data.begin(), data.end(), data_h);
   gpuErrchk(cudaMemcpy(state_d, data_h, size * sizeof(bool),cudaMemcpyHostToDevice));
-
   do {
     stable_h = true;
     gpuErrchk(cudaMemcpy(stable_d, &stable_h, sizeof(bool),
                          cudaMemcpyHostToDevice));
 
-    gpu_sparse_recall_kernel<<< numBlocks, numThreads >>> 
+    gpu_sparse_gpu_prePro_recall_kernel<<< numBlocks, numThreads >>> 
     (size, state_d, threshold_d, sW_nnz_d, sW_colInd_d, sW_rowPtr_d, stable_d);
 
 

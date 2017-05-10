@@ -5,6 +5,10 @@
 #include <cassert>
 #include <vector>
 #include <iostream>
+
+#include <cuda_runtime.h>
+#include <cusparse_v2.h>
+#include <time.h>
 using namespace std;
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -16,7 +20,12 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
       if (abort) exit(code);
    }
 }
-__global__ void gpu_sparse_recall_kernel(size_t size,
+
+
+
+#define NUM_OF_THREADS 256
+#define LANES_PER_WARP 32
+__global__ void gpu_sparse_warp_recall_kernel(size_t size,
                                         bool * state,
                                         float * thresholds,
                                         float * sW_nnz,
@@ -24,29 +33,50 @@ __global__ void gpu_sparse_recall_kernel(size_t size,
                                         int * sW_rowPtr,
                                         bool * stable) 
 {
-  // TODO
-   size_t node = blockIdx.x * blockDim.x + threadIdx.x;
-   if (node < size) {
-    float value = 0.0f;
+   __shared__ float sh_state[NUM_OF_THREADS];
+   int tx=threadIdx.x;
+   int tID= blockIdx.x*blockDim.x + tx;			// Thread ID
+   int wID = tID/LANES_PER_WARP;   			// Warp ID
+   int lane = tID & (LANES_PER_WARP-1); 		// Lane ID
+   int node=wID;
+   float value;
 
-    for (size_t k = sW_rowPtr[node]; k < sW_rowPtr[node+1]; ++k) 
-    {			
+   if (node < size) {
+    int start_node = sW_rowPtr[node];
+    int end_node = sW_rowPtr[node+1];
+    sh_state[tx] = 0.0f;
+    value =0;
+    
+    for (size_t k = start_node+lane; k < end_node; k +=LANES_PER_WARP) 
+    {	
 	if (state[sW_colInd[k]])
-		value += sW_nnz[k];
+		sh_state[tx] += sW_nnz[k];
        	else
-     		value -= sW_nnz[k];
+     		sh_state[tx] -= sW_nnz[k];
     }
+
+    //Reduction of addition
+    if (lane <16) sh_state[tx] += sh_state[tx+16];
+    if (lane <8) sh_state[tx] += sh_state[tx+8];
+    if (lane <4) sh_state[tx] += sh_state[tx+4];
+    if (lane <2) sh_state[tx] += sh_state[tx+2];
+    if (lane <1) sh_state[tx] += sh_state[tx+1];
+
+    __syncthreads();
+    if (lane ==0) {
+         value += sh_state[tx];
 
     bool update = value > thresholds[node];
     if (update != state[node]) {
       *stable = false;
       state[node] = update;
     }
-  }
   
+   }
+  } 
 }
 
-GPUSparseHopfieldNetwork::GPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
+GPUSparseWarpHopfieldNetwork::GPUSparseWarpHopfieldNetwork(const std::vector<float> &thresholds,
                                                    const std::vector<std::vector<float>> &weights,
                                                    float weightThreshold) :
   SparseHopfieldNetwork(thresholds, weights, weightThreshold) {
@@ -68,7 +98,7 @@ GPUSparseHopfieldNetwork::GPUSparseHopfieldNetwork(const std::vector<float> &thr
 
 }
 
-GPUSparseHopfieldNetwork::~GPUSparseHopfieldNetwork() {
+GPUSparseWarpHopfieldNetwork::~GPUSparseWarpHopfieldNetwork() {
 
   //Free Device memory
   cudaFree(state_d);
@@ -80,24 +110,21 @@ GPUSparseHopfieldNetwork::~GPUSparseHopfieldNetwork() {
 
 }
 
-vector<bool> GPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
-  // TODO: Implement me!
+vector<bool> GPUSparseWarpHopfieldNetwork::evaluate(const vector<bool> &data) {
 
   bool stable_h;
   bool data_h[size];
 
-  unsigned numThreads = 256;
-  unsigned numBlocks = (size-1)/numThreads+1;
-
+  unsigned numThreads = NUM_OF_THREADS;
+  unsigned numBlocks = (size*LANES_PER_WARP-1)/numThreads+1;
   copy(data.begin(), data.end(), data_h);
   gpuErrchk(cudaMemcpy(state_d, data_h, size * sizeof(bool),cudaMemcpyHostToDevice));
-
   do {
     stable_h = true;
     gpuErrchk(cudaMemcpy(stable_d, &stable_h, sizeof(bool),
                          cudaMemcpyHostToDevice));
 
-    gpu_sparse_recall_kernel<<< numBlocks, numThreads >>> 
+    gpu_sparse_warp_recall_kernel<<< numBlocks, numThreads >>> 
     (size, state_d, threshold_d, sW_nnz_d, sW_colInd_d, sW_rowPtr_d, stable_d);
 
 

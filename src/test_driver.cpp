@@ -18,19 +18,19 @@ int main(int argc, const char *argv[]) {
   }
 
   Evaluation *evaluation = getEvaluation(string(argv[1]));
-  cout << " Evaluation algorithm: " << argv[1] << endl;
+  cout << "Evaluation algorithm: " << evaluation->getName() << endl;
   size_t size = DEFAULT_SIZE;
   if (argc >= 3)
     size = atoi(argv[2]);
-  cout << "        Data size: " << size << endl;
+  cout << "           Data size: " << size << endl;
   size_t num_vectors = DEFAULT_NUM_VECTORS;
   if (argc >= 4)
     num_vectors = atoi(argv[3]);
-  cout << "# of data vectors: " << num_vectors << endl;
+  cout << "   # of data vectors: " << num_vectors << endl;
   float key_size_prop = DEFAULT_KEY_SIZE_PROP;
   if (argc >= 5)
     key_size_prop = atof(argv[4]);
-  cout << "         Key size: " << size * key_size_prop << endl;
+  cout << "            Key size: " << size * key_size_prop << endl;
 
   cout << "Generating test data... " << flush;
   auto t1 = chrono::high_resolution_clock::now();
@@ -57,6 +57,13 @@ int main(int argc, const char *argv[]) {
   diff = t2 - t1;
   cout << diff.count() << " sec" << endl;
 
+  cerr << "Initializing network... " << flush;
+  t1 = chrono::high_resolution_clock::now();
+  mem.init();
+  t2 = chrono::high_resolution_clock::now();
+  diff = t2 - t1;
+  cerr << diff.count() << " sec" << endl;
+
   cout << "Recalling data... " << flush;
   t1 = chrono::high_resolution_clock::now();
   vector<vector<bool>> results(num_vectors);
@@ -76,6 +83,6 @@ int main(int argc, const char *argv[]) {
   t2 = chrono::high_resolution_clock::now();
   diff = t2 - t1;
   cout << diff.count() << " sec" << endl;
-  cout << num_correct * 100 / num_vectors << "% correct" << endl;
+  cout << (float)num_correct * 100 / num_vectors << "% correct" << endl;
   
 }

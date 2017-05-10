@@ -16,72 +16,80 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
       if (abort) exit(code);
    }
 }
-__global__ void gpu_sparse_recall_kernel(size_t size,
+__global__ void gpu_sparse_jds_recall_kernel(size_t size,
                                         bool * state,
                                         float * thresholds,
-                                        float * sW_nnz,
-                                        int * sW_colInd,
-                                        int * sW_rowPtr,
+                                        float * jds_w_nnz,
+                                        int * jds_w_colInd,
+                                        int * jds_w_rowPtr,
+					int * row,
                                         bool * stable) 
 {
-  // TODO
    size_t node = blockIdx.x * blockDim.x + threadIdx.x;
+   int org_node = row[node];
    if (node < size) {
     float value = 0.0f;
 
-    for (size_t k = sW_rowPtr[node]; k < sW_rowPtr[node+1]; ++k) 
+   for (size_t k = jds_w_rowPtr[node]; k < jds_w_rowPtr[node+1]; ++k) 
     {			
-	if (state[sW_colInd[k]])
-		value += sW_nnz[k];
+	if (state[jds_w_colInd[k]])
+		value += jds_w_nnz[k];
        	else
-     		value -= sW_nnz[k];
+     		value -= jds_w_nnz[k];
     }
 
-    bool update = value > thresholds[node];
-    if (update != state[node]) {
+    bool update = value > thresholds[org_node];
+    if (update != state[org_node]) {
       *stable = false;
-      state[node] = update;
+      state[org_node] = update;
     }
   }
   
 }
 
-GPUSparseHopfieldNetwork::GPUSparseHopfieldNetwork(const std::vector<float> &thresholds,
+GPUSparseJDSHopfieldNetwork::GPUSparseJDSHopfieldNetwork(const std::vector<float> &thresholds,
                                                    const std::vector<std::vector<float>> &weights,
                                                    float weightThreshold) :
   SparseHopfieldNetwork(thresholds, weights, weightThreshold) {
+
+
+  //Converting CSR to JDS sparse matrix
+  CSR_2_JDS();
+
+
   //Allocating device memory
   gpuErrchk(cudaMalloc((void**)&state_d,sizeof(bool) * size));
   gpuErrchk(cudaMalloc((void**)&stable_d,sizeof(bool)));
   gpuErrchk(cudaMalloc((void**)&threshold_d,sizeof(float) * size));
-  gpuErrchk(cudaMalloc((void**)&sW_nnz_d,sizeof(float) * nnz));
-  gpuErrchk(cudaMalloc((void**)&sW_colInd_d,sizeof(int) * nnz));
-  gpuErrchk(cudaMalloc((void**)&sW_rowPtr_d,sizeof(int) * (w_row+1)));
+  gpuErrchk(cudaMalloc((void**)&jds_w_nnz_d,sizeof(float) * nnz));
+  gpuErrchk(cudaMalloc((void**)&jds_w_colInd_d,sizeof(int) * nnz));
+  gpuErrchk(cudaMalloc((void**)&jds_w_rowPtr_d,sizeof(int) * (w_row+1)));
+  gpuErrchk(cudaMalloc((void**)&row_d,sizeof(int) * (w_row)));
   
 
   // Copying data to device
   gpuErrchk(cudaMemcpy(threshold_d, thresholds.data(), size * sizeof(float),cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(sW_nnz_d, sW_nnz.data(), nnz*sizeof(float),cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(sW_colInd_d, sW_colInd.data(), nnz*sizeof(int),cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(sW_rowPtr_d, sW_rowPtr.data(),(w_row+1)*sizeof(int),cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(row_d, row.data(),w_row*sizeof(int),cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(jds_w_nnz_d, jds_w_nnz.data(), nnz*sizeof(float),cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(jds_w_colInd_d, jds_w_colInd.data(), nnz*sizeof(int),cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(jds_w_rowPtr_d, jds_w_rowPtr.data(),(w_row+1)*sizeof(int),cudaMemcpyHostToDevice));
 
 
 }
 
-GPUSparseHopfieldNetwork::~GPUSparseHopfieldNetwork() {
+GPUSparseJDSHopfieldNetwork::~GPUSparseJDSHopfieldNetwork() {
 
   //Free Device memory
   cudaFree(state_d);
   cudaFree(threshold_d);
-  cudaFree(sW_nnz_d);
-  cudaFree(sW_colInd_d);
-  cudaFree(sW_rowPtr_d);
+  cudaFree(jds_w_nnz_d);
+  cudaFree(jds_w_colInd_d);
+  cudaFree(jds_w_rowPtr_d);
   cudaFree(stable_d);
 
 }
 
-vector<bool> GPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
-  // TODO: Implement me!
+vector<bool> GPUSparseJDSHopfieldNetwork::evaluate(const vector<bool> &data) {
 
   bool stable_h;
   bool data_h[size];
@@ -97,8 +105,8 @@ vector<bool> GPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {
     gpuErrchk(cudaMemcpy(stable_d, &stable_h, sizeof(bool),
                          cudaMemcpyHostToDevice));
 
-    gpu_sparse_recall_kernel<<< numBlocks, numThreads >>> 
-    (size, state_d, threshold_d, sW_nnz_d, sW_colInd_d, sW_rowPtr_d, stable_d);
+    gpu_sparse_jds_recall_kernel<<< numBlocks, numThreads >>> 
+    (size, state_d, threshold_d, jds_w_nnz_d, jds_w_colInd_d, jds_w_rowPtr_d,row_d, stable_d);
 
 
     gpuErrchk(cudaDeviceSynchronize());
