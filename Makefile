@@ -4,16 +4,18 @@
 #
 ################################################################################
 
-EXECUTABLES := simple_test test_driver tsp
+
+EXECUTABLES := simple_test test_driver data_driver mincut_driver mincut_data_driver tsp
+
 
 # CUDA source files (compiled with cudacc)
-CUFILES	    := evaluate_dense.cu evaluate_dense_coarse.cu evaluate_dense_bit.cu evaluate_sparse.cu
+CUFILES	    := evaluate_sparse.cu evaluate_dense.cu evaluate_dense_bit.cu evaluate_dense_block.cu evaluate_dense_coarse.cu evaluate_dense_cutoff.cu evaluate_sparse_ell.cu evaluate_sparse_ell_coal.cu  evaluate_sparse_jds.cu evaluate_sparse_queue.cu evaluate_sparse_warp.cu
 # C/C++ source files (compiled with gcc / c++)
-CCFILES	    := hopfield.cpp evaluate_dense.cpp evaluate_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp
-# Header files included by any of CUFILES
+CCFILES	    := hopfield.cpp evaluate_dense.cpp evaluate_sparse.cpp assoc_memory.cpp training_hebbian.cpp training_storkey.cpp mincut.cpp
+# Header files included by any of CUFILES 
 CUHEADERS   := hopfield.hpp TSP_graph.hpp
 # Header files included by any of CCFILES
-CCHEADERS   := hopfield.hpp assoc_memory.hpp TSP_graph.hpp
+CCHEADERS   := hopfield.hpp assoc_memory.hpp mincut.hpp utils.hpp TSP_graph.hpp
 
 SRCDIR      := src
 ROOTDIR     := .
@@ -50,8 +52,8 @@ ifeq ($(dbg),1)
   CXXFLAGS  += -g3 -ggdb -DDEBUG
   NVCCFLAGS += -g -G -lineinfo -DDEBUG
 else
-  CXXFLAGS  += -O3
-  NVCCFLAGS += -O3
+  CXXFLAGS  += -O3 -DNDEBUG
+  NVCCFLAGS += -O3 -DNDEBUG
 endif
 
 ifeq ($(verbose),1)

@@ -14,12 +14,14 @@ void AssociativeMemory::store(const vector<bool> &data) {
   trainingImpl->train(data, weights, numDataSets++);
 }
 
-vector<bool> AssociativeMemory::recall(const vector<bool> &data) {
-  assert(data.size() == size);
-    
+void AssociativeMemory::init() {
   if (network == NULL)
     network = evaluationImpl->makeHopfieldNetwork(thresholds, weights);
-    
+}
+
+vector<bool> AssociativeMemory::recall(const vector<bool> &data) {
+  assert(data.size() == size);
+  init();
   return network->evaluate(data);
 }
 
