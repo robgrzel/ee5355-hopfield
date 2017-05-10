@@ -133,12 +133,13 @@ public:
                         float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
   virtual ~SparseHopfieldNetwork() {}
   void CSR_2_JDS();
+  void CSR_2_ELL();
   std::vector<int> sort_indexes(std::vector<int> &v);
   
 protected:
   const float weightThreshold;
   int w_size, w_col, w_row;
-  int nnz, rowPtr;
+  int nnz, rowPtr, max_elements;
   std::vector<float> sW_nnz;
   std::vector<int> sW_colInd;
   std::vector<int> sW_rowPtr;
@@ -147,6 +148,13 @@ protected:
   std::vector<int> jds_w_rowPtr;
   std::vector<int> row;
   std::vector<int> nnzPerRow;
+  std::vector<float> ell_w_nnz;
+  std::vector<int> ell_w_colInd;
+  std::vector<float> ell_w_nnzT;
+  std::vector<int> ell_w_colIndT;
+  //int *max_elements_d;
+  //std::vector<int> sW_rowPtr;
+
 };
 
 class CPUSparseHopfieldNetwork : public SparseHopfieldNetwork {
@@ -180,9 +188,56 @@ protected:
   float *sW_nnz_d;     // Number of Non zero elements
   int *sW_colInd_d;    // Number of Non zero elements
   int *sW_rowPtr_d;    // size+1
+
 };
 
 
+class GPUSparseELLHopfieldNetwork : public SparseHopfieldNetwork {
+public:
+  GPUSparseELLHopfieldNetwork(const std::vector<float> &thresholds,
+                           const std::vector<std::vector<float>> &weights,
+                           float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
+  ~GPUSparseELLHopfieldNetwork();
+  
+  std::vector<bool> evaluate(const std::vector<bool> &data);
+  
+protected:
+  bool *stable_d;
+  bool *state_d;
+  float *threshold_d;  // size
+  float *sW_nnz_d;     // Number of Non zero elements
+  int *sW_colInd_d;    // Number of Non zero elements
+  int *sW_rowPtr_d;    // size+1
+
+  float *ell_w_nnz_d;     // Number of Non zero elements
+  int *ell_w_colInd_d;    // Number of Non zero elements
+  int max_elements_d;    // size+1
+  
+};
+
+
+class GPUSparseELLCoalHopfieldNetwork : public SparseHopfieldNetwork {
+public:
+  GPUSparseELLCoalHopfieldNetwork(const std::vector<float> &thresholds,
+                           const std::vector<std::vector<float>> &weights,
+                           float weightThreshold=DEFAULT_WEIGHT_THRESHOLD);
+  ~GPUSparseELLCoalHopfieldNetwork();
+  
+  std::vector<bool> evaluate(const std::vector<bool> &data);
+  
+protected:
+  bool *stable_d;
+  bool *state_d;
+  float *threshold_d;  // size
+  float *sW_nnz_d;     // Number of Non zero elements
+  int *sW_colInd_d;    // Number of Non zero elements
+  int *sW_rowPtr_d;    // size+1
+
+  float *ell_w_nnz_d;     // Number of Non zero elements
+  int *ell_w_colInd_d;    // Number of Non zero elements
+  int max_elements_d;    // size+1
+  
+};
 
 class GPUSparseJDSHopfieldNetwork : public SparseHopfieldNetwork {
 public:
@@ -248,6 +303,11 @@ protected:
   int *sW_rowPtr_d;    // size+1
   int *d_nnzPerVector;
   float *d_w_dense;
+
+  float *ell_w_nnz_d;     // Number of Non zero elements
+  int *ell_w_colInd_d;    // Number of Non zero elements
+  int max_elements_d;    // size+1
+
 };
 
 
@@ -361,6 +421,32 @@ public:
   std::string getName() const { return "GPU sparse - CSR"; }
 };
 
+class GPUSparseELLEvaluation : public SparseEvaluation {
+public:
+  GPUSparseELLEvaluation(float weightThreshold=DEFAULT_WEIGHT_THRESHOLD) :
+    SparseEvaluation(weightThreshold) {}
+  ~GPUSparseELLEvaluation() {}
+  
+  HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                       const std::vector<std::vector<float>> &weights) {
+    return new GPUSparseELLHopfieldNetwork(thresholds, weights, weightThreshold);
+  }
+  std::string getName() const { return "GPU sparse - ELL Non-Coalesced"; }
+};
+
+
+class GPUSparseELLCoalEvaluation : public SparseEvaluation {
+public:
+  GPUSparseELLCoalEvaluation(float weightThreshold=DEFAULT_WEIGHT_THRESHOLD) :
+    SparseEvaluation(weightThreshold) {}
+  ~GPUSparseELLCoalEvaluation() {}
+  
+  HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                       const std::vector<std::vector<float>> &weights) {
+    return new GPUSparseELLCoalHopfieldNetwork(thresholds, weights, weightThreshold);
+  }
+  std::string getName() const { return "GPU sparse - ELL Coalesced"; }
+};
 
 class GPUSparseJDSEvaluation : public SparseEvaluation {
 public:

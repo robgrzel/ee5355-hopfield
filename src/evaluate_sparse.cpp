@@ -24,10 +24,37 @@ std::vector<int> SparseHopfieldNetwork::sort_indexes( std::vector<int> &v) {
 }
 
 
+void SparseHopfieldNetwork::CSR_2_ELL( )
+{
+  //Converting CSR to ELL
+   max_elements = *std::max_element(nnzPerRow.begin(),nnzPerRow.end());
+   for(int i=0; i <w_row;++i)
+   {
+     for(int j =0; j<max_elements;++j){
+        if(sW_rowPtr[i+1]-sW_rowPtr[i] > j) {
+        	ell_w_nnz.push_back(sW_nnz[sW_rowPtr[i]+j]);
+        	ell_w_colInd.push_back(sW_colInd[sW_rowPtr[i]+j]);
+        }
+        else {
+        	ell_w_nnz.push_back(0);
+        	ell_w_colInd.push_back(0);
+        }
+     }
+    
+   }
+
+   //Performing transpose
+   for(int i =0; i <max_elements;++i)
+     for(int j=0; j <w_row;++j) {
+         ell_w_nnzT.push_back(ell_w_nnz[j*max_elements+i]);
+         ell_w_colIndT.push_back(ell_w_colInd[j*max_elements+i]);
+      }
+}
+
+
 void SparseHopfieldNetwork::CSR_2_JDS( )
 {
   //Converting CSR to JDS
-
    row=sort_indexes(nnzPerRow);
 
    int jds_nnz=0;
@@ -75,22 +102,24 @@ SparseHopfieldNetwork::SparseHopfieldNetwork(const std::vector<float> &threshold
   }
   
   sW_rowPtr[w_row] = rowPtr; // Last pointer equal number of NNZ elements
- 
-  //CSR_2_JDS();
 
   //Sparse matrix Debuging code
-
 #ifndef NDEBUG
   printf("Percentage of NNZ elements in weight matrix using threshold %f = %f%%\n", weightThreshold,(100.00*nnz/(w_size*w_size)));
 #endif
 /*
 printf("\n   CSR   \n");
-   for (int f=0; f<nnz;++f)
-      printf("%.2f  ",sW_nnz[f]);
+   for(int i=0; i < w_row; ++i) {
+       for (int f=sW_rowPtr[i]; f<sW_rowPtr[i+1];++f)
+           printf("%.2f  ",sW_nnz[f]);
+       cout <<endl;
+    }
    printf("\n");
-   for (int f=0; f<nnz;++f)
-      printf("%d  ",sW_colInd[f]);
-   printf("\n");
+   for(int i=0; i < w_row; ++i) {
+       for (int f=sW_rowPtr[i]; f<sW_rowPtr[i+1];++f)
+           printf("%d  ",sW_colInd[f]);
+       cout <<endl;
+    }
    for (int f=0; f<w_row+1;++f)
       printf("%d  ",sW_rowPtr[f]);
    printf("\n");
@@ -106,7 +135,27 @@ printf("\n   JDS   \n");
    for (int f=0; f<w_row+1;++f)
       printf("%d  ",jds_w_rowPtr[f]);
    printf("\n");
-*/  
+
+
+
+printf("\n   ELL   \n");
+ 
+   for(int i=0; i < max_elements; ++i) {
+      for (int f=i*w_row; f<(i*w_row+w_row);++f)
+          printf("%.2f  ",ell_w_nnzT[f]);
+      cout <<endl;
+   }
+   printf("\n");
+   for(int i=0; i < max_elements; ++i) {
+      for (int f=i*w_row; f<(i*w_row+w_row);++f)
+          printf("%d  ",ell_w_colIndT[f]);
+      cout <<endl;
+   }
+   printf("%d  ",max_elements);
+   printf("\n");
+*/
+
+
 }
 
 vector<bool> CPUSparseHopfieldNetwork::evaluate(const vector<bool> &data) {

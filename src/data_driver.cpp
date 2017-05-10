@@ -10,10 +10,10 @@ using namespace std;
 
 #define MIN_SIZE 50
 #define MAX_SIZE 10000
-#define STEP_SIZE 50
+#define STEP_SIZE 1000
 #define TRIALS 5
 
-#define EVALUATION {"cpu_dense", "gpu_dense", "gpu_dense_block", "cpu_sparse", "gpu_sparse_csr","gpu_sparse_jds", "gpu_sparse_warp","gpu_sparse_queue"}
+#define EVALUATION {"cpu_dense", "gpu_dense", "gpu_dense_block", "cpu_sparse", "gpu_sparse_csr","gpu_sparse_jds", "gpu_sparse_warp","gpu_sparse_queue","gpu_sparse_ell","gpu_sparse_ell_coal"}
 
 #define NUM_VECTORS 100
 #define KEY_SIZE_PROP 0.25
