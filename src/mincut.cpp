@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <iostream>
 #include "utils.hpp"
-#include "chrono"
+#include <chrono>
 /*
  * Just returns the last node of the graph
  *
@@ -102,7 +102,11 @@ std::vector<std::vector<unsigned> > MinCutGraph::partitionGraph(Evaluation *cons
     /*std::cout << "\ninitial states:\n";
     printVector(initialStates);*/
 
+    auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<bool> states = network->evaluate(initialStates);    
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = t2 - t1;
+    std::cerr << diff.count() << " ker sec\n";
 
     std::vector<std::vector<unsigned> > partitions;
     partitions.push_back(std::vector<unsigned>());

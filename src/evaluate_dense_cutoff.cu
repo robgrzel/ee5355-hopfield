@@ -109,6 +109,7 @@ vector<bool> GPUDenseCutoffHopfieldNetwork::evaluate(const vector<bool> &data) {
   cudaCheck(cudaMemcpy(stateDev, dataArray, size * sizeof(bool),
                        cudaMemcpyHostToDevice));
 
+  unsigned ites = 0;
   do {
     gpu_dense_cutoff_recall_kernel<<< size, BLOCK_SIZE >>>
       (size, stateDev, thresholdsDev, weightsDev, changedDev);
@@ -125,8 +126,10 @@ vector<bool> GPUDenseCutoffHopfieldNetwork::evaluate(const vector<bool> &data) {
     for (size_t i = 0; i < numReductionBlocks; i++) {
       numChanged += changedArray[i];
     }
-  } while (numChanged > 0 && numChanged < prevNumChanged);
-
+    ites++;
+        
+  } while (numChanged > data.size()/20 && numChanged < prevNumChanged);
+    std::cout << "num ites: " << ites << " ";
   cudaCheck(cudaMemcpy(dataArray, stateDev, size * sizeof(bool),
                        cudaMemcpyDeviceToHost));
 
