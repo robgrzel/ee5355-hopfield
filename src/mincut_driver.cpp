@@ -21,7 +21,11 @@ int main(int argc, char** argv) {
 
     MinCutGraph graph(numVertices);
     //printVector<float>(graph.getWeights());
+    auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<std::vector<unsigned> > partitions = graph.partitionGraph(evaluation);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = t2 - t1;
+    std::cout << diff.count() << " sec" << std::endl;
 
     std::cout << "\nPartitions, one partition per line: \n";
     printVector(partitions[0]);

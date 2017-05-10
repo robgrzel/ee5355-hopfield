@@ -96,17 +96,13 @@ std::vector<std::vector<unsigned> > MinCutGraph::partitionGraph(Evaluation *cons
     std::cout << "\nhopfield thresholds:\n";
     printVector(thresholds);*/
     
-	HopfieldNetwork* network = evaluationImpl->makeHopfieldNetwork(thresholds, hopfieldW);
+    HopfieldNetwork* network = evaluationImpl->makeHopfieldNetwork(thresholds, hopfieldW);
 
     std::vector<bool> initialStates = generateInitialStates();
     /*std::cout << "\ninitial states:\n";
     printVector(initialStates);*/
 
-    auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<bool> states = network->evaluate(initialStates);    
-    auto t2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> diff = t2 - t1;
-    std::cout << diff.count() << " sec" << std::endl;
 
     std::vector<std::vector<unsigned> > partitions;
     partitions.push_back(std::vector<unsigned>());
@@ -121,6 +117,8 @@ std::vector<std::vector<unsigned> > MinCutGraph::partitionGraph(Evaluation *cons
     //station to false --> weights to thresholds
     //station to true --> weights to -thresholds
     partitions[0].push_back(station);
+
+    delete network;
     
     return partitions;
 }
