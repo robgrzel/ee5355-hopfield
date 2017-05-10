@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-EXECUTABLES := simple_test test_driver data_driver mincut_driver
+EXECUTABLES := simple_test test_driver data_driver mincut_driver mincut_data_driver
 
 # CUDA source files (compiled with cudacc)
 CUFILES	    := evaluate_sparse.cu evaluate_dense.cu evaluate_dense_bit.cu evaluate_dense_block.cu evaluate_dense_coarse.cu evaluate_dense_cutoff.cu evaluate_sparse_ell.cu evaluate_sparse_ell_coal.cu  evaluate_sparse_jds.cu evaluate_sparse_queue.cu evaluate_sparse_warp.cu

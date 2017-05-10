@@ -72,6 +72,7 @@ public:
   }
 
   void store(const std::vector<bool> &data);
+  void init();
   std::vector<bool> recall(const std::vector<bool> &data);
 
   const size_t size;

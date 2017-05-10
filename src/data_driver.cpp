@@ -9,11 +9,12 @@
 using namespace std;
 
 #define MIN_SIZE 50
-#define MAX_SIZE 10000
-#define STEP_SIZE 1000
+
+#define MAX_SIZE 15000
+#define STEP_SIZE 50
 #define TRIALS 5
 
-#define EVALUATION {"cpu_dense", "gpu_dense", "gpu_dense_block", "cpu_sparse", "gpu_sparse_csr","gpu_sparse_jds", "gpu_sparse_warp","gpu_sparse_queue","gpu_sparse_ell","gpu_sparse_ell_coal"}
+#define EVALUATION {"cpu_dense", "gpu_dense", "gpu_dense_bit", "gpu_dense_block", "cpu_sparse", "gpu_sparse_csr","gpu_sparse_jds", "gpu_sparse_warp", "gpu_sparse_queue", "gpu_sparse_ell","gpu_sparse_ell_coal"}
 
 #define NUM_VECTORS 100
 #define KEY_SIZE_PROP 0.25
@@ -30,9 +31,14 @@ int main() {
   for (unsigned i = 0; i < numEvaluationAlgorithms; i++) {
     cout << "," << getEvaluation(evaluationAlgorithms[i])->getName();
   }
+  cout << ",,Data Size";
+  for (unsigned i = 0; i < numEvaluationAlgorithms; i++) {
+    cout << "," << getEvaluation(evaluationAlgorithms[i])->getName();
+  }
   cout << endl;
   
   for (size_t size = MIN_SIZE; size <= MAX_SIZE; size += STEP_SIZE) {
+    vector<double> initTimes(numEvaluationAlgorithms);
     vector<double> times(numEvaluationAlgorithms);
     vector<float> accuracies(numEvaluationAlgorithms);
     for (unsigned i = 0; i < numEvaluationAlgorithms; i++) {
@@ -69,6 +75,14 @@ int main() {
       diff = t2 - t1;
       cerr << diff.count() << " sec" << endl;
 
+      cerr << "Initializing network... " << flush;
+      t1 = chrono::high_resolution_clock::now();
+      mem.init();
+      t2 = chrono::high_resolution_clock::now();
+      diff = t2 - t1;
+      cerr << diff.count() << " sec" << endl;
+      initTimes[i] = diff.count();
+
       double time = numeric_limits<int>::max();
       float accuracy = 0;
       for (unsigned j = 0; j < TRIALS; j++) {
@@ -104,6 +118,10 @@ int main() {
     }
     
     cout << size;
+    for (double initTime : initTimes) {
+      cout << "," << initTime;
+    }
+    cout << ",," << size;
     for (double time : times) {
       cout << "," << time;
     }
