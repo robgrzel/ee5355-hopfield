@@ -128,8 +128,8 @@ MinCutGraph::MinCutGraph(unsigned numVertices) {
     for (unsigned i = 0; i < numVertices; i++) {
         for (unsigned j = i+1; j < numVertices; j++) {
             float val = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            //if (rand() % 2 > 0) 
-                //val = -val;
+            if (rand() % 2 > 0) 
+                val = -val;
             weights[i][j] = val;
             weights[j][i] = val;
         }
