@@ -13,7 +13,7 @@ using namespace std;
 #define STEP_SIZE 50
 #define TRIALS 5
 
-#define EVALUATION {"cpu_dense", "gpu_dense", "gpu_dense_block", "cpu_sparse", "gpu_sparse_csr","gpu_sparse_jds", "gpu_sparse_warp","gpu_sparse_queue"}
+#define EVALUATION {"cpu_dense", "gpu_dense_cutoff", "cpu_sparse"}
 
 int main() {
   string evaluationAlgorithms[] = EVALUATION;

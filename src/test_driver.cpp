@@ -57,6 +57,13 @@ int main(int argc, const char *argv[]) {
   diff = t2 - t1;
   cout << diff.count() << " sec" << endl;
 
+  cerr << "Initializing network... " << flush;
+  t1 = chrono::high_resolution_clock::now();
+  mem.init();
+  t2 = chrono::high_resolution_clock::now();
+  diff = t2 - t1;
+  cerr << diff.count() << " sec" << endl;
+
   cout << "Recalling data... " << flush;
   t1 = chrono::high_resolution_clock::now();
   vector<vector<bool>> results(num_vectors);
