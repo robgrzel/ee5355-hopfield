@@ -9,7 +9,7 @@
 using namespace std;
 
 #define MIN_SIZE 50
-#define MAX_SIZE 10000
+#define MAX_SIZE 15000
 #define STEP_SIZE 50
 #define TRIALS 5
 
