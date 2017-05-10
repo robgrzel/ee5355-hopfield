@@ -88,7 +88,8 @@ void Queens::printSolution() {
  */
 bool Queens::verifySolution() {
   // Check each row
-  for (int i = 0, count = 0; i < num; ++i) {
+  int count;
+  for (int i = 0; i < num; ++i) {
     count = 0;
     for (int j = 0; j < num; ++j) {
       count += solution[i * num + j];
@@ -96,7 +97,7 @@ bool Queens::verifySolution() {
     if (count != 1) return false;
   }
   // Check each col
-  for (int j = 0, count = 0; j < num; ++j) {
+  for (int j = 0; j < num; ++j) {
     count = 0;
     for (int i = 0; i < num; ++i) {
       count += solution[i * num + j];
@@ -104,7 +105,15 @@ bool Queens::verifySolution() {
     if (count != 1) return false;
   }
   // TODO Check diagonals
-
+  // http://stackoverflow.com/questions/1779199/traverse-matrix-in-diagonal-strips
+  for (int slice = 0; slice < 2 * num - 1; ++slice) {
+    int z = (slice < num) ? 0 : slice - num + 1;
+    count = 0;
+    for (int j = z; j <= slice - z; ++j) {
+        count += solution[(j * num) + (slice - j)];
+    }
+    if (count != 1) return false;
+  }
   return true;
 }
 
