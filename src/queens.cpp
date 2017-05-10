@@ -1,6 +1,5 @@
 #include "queens.hpp"
 #include "hopfield.hpp"
-
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
@@ -33,7 +32,7 @@ bool isDiagonal(int i, int j, int k, int l) {
   int diffy = abs(j - l);
   return diffx == diffy;
 }
- 
+
 vector<vector<float>> Queens::getWeights() {
   vector<vector<float>> weights(num * num, vector<float>(num * num, 0));
 
@@ -87,32 +86,19 @@ void Queens::printSolution() {
  * @retval true  - solution is valid
  */
 bool Queens::verifySolution() {
-  // Check each row
-  int count;
+  vector<Queen> queens;
+
   for (int i = 0; i < num; ++i) {
-    count = 0;
     for (int j = 0; j < num; ++j) {
-      count += solution[i * num + j];
+      Queen q(i,j);
+      if(solution[i * num + j]) queens.push_back(q);
     }
-    if (count != 1) return false;
   }
-  // Check each col
-  for (int j = 0; j < num; ++j) {
-    count = 0;
-    for (int i = 0; i < num; ++i) {
-      count += solution[i * num + j];
+  printf("%d queens detected\n", (int)queens.size());
+  for (unsigned i = 0; i < queens.size(); ++i) {
+    for (unsigned j = 0; j < queens.size(); ++j) {
+      if(queens[i].conflict(queens[j])) return false;
     }
-    if (count != 1) return false;
-  }
-  // TODO Check diagonals
-  // http://stackoverflow.com/questions/1779199/traverse-matrix-in-diagonal-strips
-  for (int slice = 0; slice < 2 * num - 1; ++slice) {
-    int z = (slice < num) ? 0 : slice - num + 1;
-    count = 0;
-    for (int j = z; j <= slice - z; ++j) {
-        count += solution[(j * num) + (slice - j)];
-    }
-    if (count != 1) return false;
   }
   return true;
 }

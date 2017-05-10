@@ -20,7 +20,7 @@ int main(int argc, char ** argv) {
   num = atoi(argv[1]);
   gamma = atof(argv[2]);
   threshold = atof(argv[3]);
-  
+
   Queens nQueens(num, gamma, threshold);
   unsigned repeats = 0;
   do {

@@ -2,7 +2,7 @@
 #ifndef TSP_GRAPH_H
 #define TSP_GRAPH_H
 
-#include "Point.h"
+#include "Point.hpp"
 #include <vector>
 #include <cstdio>
 #include <iostream>
