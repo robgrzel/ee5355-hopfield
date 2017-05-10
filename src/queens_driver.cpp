@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
-
+#include <cstdio>
 using namespace std;
 
 int main(int argc, char ** argv) {
@@ -20,14 +20,15 @@ int main(int argc, char ** argv) {
   num = atoi(argv[1]);
   gamma = atof(argv[2]);
   threshold = atof(argv[3]);
-
+  
+  Queens nQueens(num, gamma, threshold);
   unsigned repeats = 0;
   do {
-    Queens nQueens(num, gamma, threshold);
 
     nQueens.solve();
-    nQueens.printSolution();
+    repeats++;
   } while (!nQueens.verifySolution());
+  nQueens.printSolution();
 
   printf("%d,%f,%f,%u\n", num, gamma, threshold, repeats);
 

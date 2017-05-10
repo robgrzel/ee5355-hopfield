@@ -61,7 +61,7 @@ vector<vector<float>> Queens::getWeights() {
 void Queens::solve() {
   vector<bool> board(num * num, false);
 
-  GPUDenseHopfieldNetwork network(getThresholds(), getWeights());
+  CPUDenseHopfieldNetwork network(getThresholds(), getWeights());
 
 
   solution = network.evaluate(board);
@@ -87,13 +87,24 @@ void Queens::printSolution() {
  * @retval true  - solution is valid
  */
 bool Queens::verifySolution() {
+  // Check each row
   for (int i = 0, count = 0; i < num; ++i) {
     count = 0;
     for (int j = 0; j < num; ++j) {
-      if (solution[i * num + j]) count++;
+      count += solution[i * num + j];
     }
     if (count != 1) return false;
   }
+  // Check each col
+  for (int j = 0, count = 0; j < num; ++j) {
+    count = 0;
+    for (int i = 0; i < num; ++i) {
+      count += solution[i * num + j];
+    }
+    if (count != 1) return false;
+  }
+  // TODO Check diagonals
+
   return true;
 }
 
