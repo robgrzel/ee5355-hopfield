@@ -56,7 +56,15 @@ vector<vector<float>> Queens::getWeights() {
 
   return weights;
 }
-
+float Queens::getAverage() {
+  return average;
+}
+unsigned Queens::getIterations() {
+  return iterations;
+}
+unsigned Queens::getQueenCount() {
+  return queenCount;
+}
 void Queens::solve() {
   vector<bool> board(num * num, false);
 
@@ -78,8 +86,12 @@ void Queens::printSolution() {
     cout << endl;
   }
   cout << "\x1b[0m";
+  printf("%u queens detected\n", queenCount);
 }
-
+float Queens::addToAverage(int n) {
+  average = (n + (average * iterations)) / (iterations+1);
+  return average;
+}
 /**
  * @brief Verifies that solution is a valid n-queens solution
  * @retval false - solution is invalid
@@ -94,12 +106,18 @@ bool Queens::verifySolution() {
       if(solution[i * num + j]) queens.push_back(q);
     }
   }
-  printf("%d queens detected\n", (int)queens.size());
-  for (unsigned i = 0; i < queens.size(); ++i) {
-    for (unsigned j = 0; j < queens.size(); ++j) {
-      if(queens[i].conflict(queens[j])) return false;
+  addToAverage((int)queens.size());
+  queenCount = queens.size();
+  iterations++;
+  if (queens.size() == num) {
+    // printf("%d queens detected\n", (int)queens.size());
+    for (unsigned i = 0; i < queens.size(); ++i) {
+      for (unsigned j = 0; j < queens.size(); ++j) {
+        if((i != j) && queens[i].conflict(queens[j])) return false;
+      }
     }
+    return true;
   }
-  return true;
+  return false;
 }
 

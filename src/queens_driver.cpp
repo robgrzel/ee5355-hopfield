@@ -22,15 +22,17 @@ int main(int argc, char ** argv) {
   threshold = atof(argv[3]);
 
   Queens nQueens(num, gamma, threshold);
-  unsigned repeats = 0;
   do {
-
     nQueens.solve();
-    repeats++;
+    // system("clear");
+    nQueens.verifySolution();
+    // nQueens.printSolution();
+    // printf("%f queens on average for %u iterations\n", nQueens.getAverage(), nQueens.getIterations());
+    // printf("Press Enter to continue.\n");
+    // if(nQueens.getQueenCount() == num) cin.get();
   } while (!nQueens.verifySolution());
-  nQueens.printSolution();
 
-  printf("%d,%f,%f,%u\n", num, gamma, threshold, repeats);
+  printf("%d,%.2f,%.2f,%u\n", num, gamma, threshold, nQueens.getIterations());
 
   return 0;
 }
