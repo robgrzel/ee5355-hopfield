@@ -25,7 +25,7 @@ class Queen {
     }
     bool conflict(const Queen& q) {
       // return (x == q.x) || (y == q.y) || ((x+y) == (q.x+q.y));
-      return (x == q.x) || (y == q.y);
+      return (x == q.x) || (y == q.y) || (std::abs(x - q.x) == std::abs(y - q.y));
     }
     void print() {
       std::cout << "(" << x << ", " << y << ")";
@@ -43,14 +43,21 @@ class Queens {
     float gamma;
     float threshold;
     std::vector<bool> solution;
+    float average;
+    unsigned iterations;
+    unsigned queenCount;
 
+    float addToAverage(int n);
     void printWeights(std::vector<std::vector<float>> &weights);
 
   public:
-    Queens(int n, float g, float t) : num(n), gamma(g), threshold(t) {}
+    Queens(int n, float g, float t) : num(n), gamma(g), threshold(t), average(0), iterations(0), queenCount(0) {}
 
     std::vector<float> getThresholds();
     std::vector<std::vector<float>> getWeights();
+    float getAverage();
+    unsigned getIterations();
+    unsigned getQueenCount();
 
     void solve();
     void printSolution();
