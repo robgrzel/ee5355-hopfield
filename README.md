@@ -26,3 +26,12 @@ fi
 ```
 to .bashrc
 
+## Compilation
+To compile the code, run `make` at the top-level of the repository (or `make -j` for a faster build).  This will compile everything and place the executables in the `bin/release` folder.  
+
+## Execution
+The following executables that have been built may be run:
+* `mincut_driver`: Runs the mincut algorithm on random inputs.  Usage: `<num vertices> <evaluation method>`
+* `queens_driver`: Runs n-queens for a given size.  Usage: `./bin/release/queens_driver N gamma threshold`
+* `test_driver`: Runs a test of associative memory using random data.  Usage: `./bin/release/test_driver <evaluation algorithm> <data size>(=10000) <# of data vectors>(=100) <fraction of vector included in key>(=0.25)`
+Several other execuatables are also built, used for generating test data.  These may be ignored.  
