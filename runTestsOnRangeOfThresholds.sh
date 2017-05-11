@@ -23,8 +23,8 @@ echo "    threshold"
 echo ""
 echo "Storing results in $OUTPUT_FILE"
 echo ""
-make && for threshold in `seq $START_THRESHOLD $END_THRESHOLD`; do
-    for repeat in {1..$REPEAT_N_TIMES}; do
+make && for threshold in `seq $START_THRESHOLD 10 $END_THRESHOLD`; do
+    for repeat in `seq 1 $REPEAT_N_TIMES`; do
         bin/release/queens_driver $NUM_QUEENS $GAMMA $threshold;
     done;
 done > $OUTPUT_FILE
