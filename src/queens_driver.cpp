@@ -24,12 +24,10 @@ int main(int argc, char ** argv) {
   Queens nQueens(num, gamma, threshold);
   do {
     nQueens.solve();
-    // system("clear");
+    system("clear");
     nQueens.verifySolution();
-    // nQueens.printSolution();
-    // printf("%f queens on average for %u iterations\n", nQueens.getAverage(), nQueens.getIterations());
-    // printf("Press Enter to continue.\n");
-    // if(nQueens.getQueenCount() == num) cin.get();
+    nQueens.printSolution();
+    printf("%f queens on average for %u iterations\n", nQueens.getAverage(), nQueens.getIterations());
   } while (!nQueens.verifySolution());
 
   printf("%d,%.2f,%.2f,%u\n", num, gamma, threshold, nQueens.getIterations());

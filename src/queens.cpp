@@ -109,7 +109,7 @@ bool Queens::verifySolution() {
   addToAverage((int)queens.size());
   queenCount = queens.size();
   iterations++;
-  if (queens.size() == num) {
+  if ((int)queens.size() == num) {
     // printf("%d queens detected\n", (int)queens.size());
     for (unsigned i = 0; i < queens.size(); ++i) {
       for (unsigned j = 0; j < queens.size(); ++j) {
