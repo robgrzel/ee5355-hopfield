@@ -98,6 +98,22 @@ protected:
   float *weightsDev;    // size * size
 };
 
+class GPUDenseBlockCoarseHopfieldNetwork : public HopfieldNetwork {
+public:
+  GPUDenseBlockCoarseHopfieldNetwork(const std::vector<float> &thresholds,
+                               const std::vector<std::vector<float>> &weights,
+                               size_t parallel=10);
+  ~GPUDenseBlockCoarseHopfieldNetwork();
+  
+  std::vector<bool> evaluate(const std::vector<bool> &data);
+
+  const size_t parallel;
+protected:
+  // Device memory
+  float *thresholdsDev; // size
+  float *weightsDev;    // size * size
+};
+
 class GPUDenseCutoffHopfieldNetwork : public HopfieldNetwork {
 public:
   GPUDenseCutoffHopfieldNetwork(const std::vector<float> &thresholds,
@@ -312,10 +328,6 @@ protected:
 
 };
 
-
-
-
-
 // Factory class for Hopfield networks
 class Evaluation {
 public:
@@ -328,6 +340,7 @@ public:
 
 // Implementation subclasses
 class CPUDenseEvaluation : public Evaluation {
+public:
   ~CPUDenseEvaluation() {}
   
   HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
@@ -338,6 +351,7 @@ class CPUDenseEvaluation : public Evaluation {
 };
 
 class GPUDenseEvaluation : public Evaluation {
+public:
   ~GPUDenseEvaluation() {}
   
   HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
@@ -348,6 +362,7 @@ class GPUDenseEvaluation : public Evaluation {
 };
 
 class GPUDenseBitEvaluation : public Evaluation {
+public:
   ~GPUDenseBitEvaluation() {}
   
   HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
@@ -358,6 +373,7 @@ class GPUDenseBitEvaluation : public Evaluation {
 };
 
 class GPUDenseBlockEvaluation : public Evaluation {
+public:
   ~GPUDenseBlockEvaluation() {}
   
   HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
@@ -367,7 +383,22 @@ class GPUDenseBlockEvaluation : public Evaluation {
   std::string getName() const { return "GPU dense block"; }
 };
 
+class GPUDenseBlockCoarseEvaluation : public Evaluation {
+public:
+  GPUDenseBlockCoarseEvaluation(size_t parallel=10) : parallel(parallel) {}
+  ~GPUDenseBlockCoarseEvaluation() {}
+  
+  HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
+                                       const std::vector<std::vector<float>> &weights) {
+    return new GPUDenseBlockCoarseHopfieldNetwork(thresholds, weights, parallel);
+  }
+  std::string getName() const { return "GPU dense block coarse"; }
+  
+  const size_t parallel;
+};
+
 class GPUDenseCutoffEvaluation : public Evaluation {
+public:
   ~GPUDenseCutoffEvaluation() {}
   
   HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,
@@ -378,6 +409,7 @@ class GPUDenseCutoffEvaluation : public Evaluation {
 };
 
 class GPUDenseCoarseEvaluation : public Evaluation {
+public:
   ~GPUDenseCoarseEvaluation() {}
   
   HopfieldNetwork *makeHopfieldNetwork(const std::vector<float> &thresholds,

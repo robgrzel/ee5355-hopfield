@@ -15,6 +15,8 @@ Evaluation *getEvaluation(const string &name) {
     return new GPUDenseBitEvaluation;
   else if (name == "gpu_dense_block")
     return new GPUDenseBlockEvaluation;
+  else if (name == "gpu_dense_block_coarse")
+    return new GPUDenseBlockCoarseEvaluation;
   else if (name == "gpu_dense_cutoff")
     return new GPUDenseCutoffEvaluation;
   else if (name == "gpu_dense_coarse")
