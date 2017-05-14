@@ -11,7 +11,8 @@ using namespace std;
 
 __global__ void gpu_dense_block_coarse_recall_kernel(size_t size,
                                                      size_t startIdx,
-                                                     bool * state,
+                                                     bool * state1,
+                                                     bool * state2,
                                                      float * thresholds,
                                                      float * weights,
                                                      bool * stable) {
@@ -21,7 +22,7 @@ __global__ void gpu_dense_block_coarse_recall_kernel(size_t size,
     // Compute values in a strided pattern
     float value = 0.0f;
     for (size_t k = threadIdx.x; k < size; k += BLOCK_SIZE) {
-      if (state[k])
+      if (state1[k])
         value += weights[i * size + k];
       else
         value -= weights[i * size + k];
@@ -44,10 +45,13 @@ __global__ void gpu_dense_block_coarse_recall_kernel(size_t size,
   
     // Perform update
     bool update = value > thresholds[i];
-    if (update != state[i]) {
+    if (update != state1[i]) {
       *stable = false;
+      // if (threadIdx.x == 0) {
+      //   printf("Wrote %2lu: %c -> %c\n", i, state1[i]? '1' : '0', update? '1' : '0');
+      // }
     }
-    state[i] = update;
+    state2[blockIdx.x] = update;
   }
 }
 
@@ -81,14 +85,15 @@ vector<bool> GPUDenseBlockCoarseHopfieldNetwork::evaluate(const vector<bool> &da
   bool stable;
   bool dataArray[size];
 
-  bool *stateDev;
+  bool *stateDev1, *stateDev2;
   bool *stableDev;
 
-  cudaCheck(cudaMalloc((void**) &stateDev, sizeof(bool) * size));
+  cudaCheck(cudaMalloc((void**) &stateDev1, sizeof(bool) * ((size - 1) / parallel + 1) * parallel));
+  cudaCheck(cudaMalloc((void**) &stateDev2, sizeof(bool) * parallel));
   cudaCheck(cudaMalloc((void**) &stableDev, sizeof(bool)));
 
   copy(data.begin(), data.end(), dataArray);
-  cudaCheck(cudaMemcpy(stateDev, dataArray, size * sizeof(bool),
+  cudaCheck(cudaMemcpy(stateDev1, dataArray, size * sizeof(bool),
                        cudaMemcpyHostToDevice));
 
   cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
@@ -100,24 +105,26 @@ vector<bool> GPUDenseBlockCoarseHopfieldNetwork::evaluate(const vector<bool> &da
 
     for (size_t startIdx = 0; startIdx < size; startIdx += parallel) {
       gpu_dense_block_coarse_recall_kernel<<< parallel, BLOCK_SIZE >>>
-        (size, startIdx, stateDev, thresholdsDev, weightsDev, stableDev);
+        (size, startIdx, stateDev1, stateDev2, thresholdsDev, weightsDev, stableDev);
+      cudaCheck(cudaDeviceSynchronize());
+      cudaCheck(cudaMemcpy(stateDev1 + startIdx, stateDev2, parallel,
+                           cudaMemcpyDeviceToDevice));
       cudaCheck(cudaDeviceSynchronize());
     }
-    //gpu_dense_block_coarse_recall_kernel<<< parallel, BLOCK_SIZE >>>
-    //  (size, stateDev, thresholdsDev, weightsDev, stableDev);
 
     cudaCheck(cudaMemcpy(&stable, stableDev, sizeof(bool),
                          cudaMemcpyDeviceToHost));
   } while (!stable);
 
-  cudaCheck(cudaMemcpy(dataArray, stateDev, size * sizeof(bool),
+  cudaCheck(cudaMemcpy(dataArray, stateDev1, size * sizeof(bool),
                        cudaMemcpyDeviceToHost));
 
   cudaCheck(cudaDeviceSynchronize());
   
   vector<bool> state(dataArray, dataArray + size);
 
-  cudaFree(stateDev);
+  cudaFree(stateDev1);
+  cudaFree(stateDev2);
   cudaFree(stableDev);
 
   return state;

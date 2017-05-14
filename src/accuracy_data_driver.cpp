@@ -8,29 +8,29 @@
 #include <vector>
 using namespace std;
 
-#define MIN_SIZE 2000
-#define MAX_SIZE 5000
-#define STEP_SIZE 50
-#define MIN_PARALLEL 1
-#define MAX_PARALLEL 200
-#define STEP_PARALLEL 13
+#define SIZE 5000
+#define MIN_PARALLEL 100
+#define MAX_PARALLEL 5000
+#define STEP_PARALLEL 400
+#define MIN_NUM_VECTORS 150
+#define MAX_NUM_VECTORS 500
+#define STEP_NUM_VECTORS 10
 
-#define NUM_VECTORS 200
 #define KEY_SIZE_PROP 0.25
 
 int main() {
-  cout << "Data Size";
+  cout << "# of data vectors";
   for (unsigned parallel = MIN_PARALLEL; parallel <= MAX_PARALLEL; parallel += STEP_PARALLEL) {
     cout << "," << parallel << " Parallel Updates";
   }
   cout << endl;
   
-  for (size_t size = MIN_SIZE; size <= MAX_SIZE; size += STEP_SIZE) {
+  for (size_t num_vectors = MIN_NUM_VECTORS; num_vectors <= MAX_NUM_VECTORS; num_vectors += STEP_NUM_VECTORS) {
     vector<float> accuracies;
     for (unsigned parallel = MIN_PARALLEL; parallel <= MAX_PARALLEL; parallel += STEP_PARALLEL) {
       cerr << "# of parallel updates: " << parallel << endl;
+      size_t size = SIZE;
       cerr << "            Data size: " << size << endl;
-      size_t num_vectors = NUM_VECTORS;
       cerr << "    # of data vectors: " << num_vectors << endl;
       float key_size_prop = KEY_SIZE_PROP;
       cerr << "             Key size: " << size * key_size_prop << endl;
@@ -93,7 +93,7 @@ int main() {
       accuracies.push_back(accuracy);
     }
     
-    cout << size;
+    cout << num_vectors;
     for (double accuracy : accuracies) {
       cout << "," << accuracy;
     }
